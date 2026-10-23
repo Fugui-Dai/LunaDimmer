@@ -19,7 +19,6 @@ a = Analysis(
     binaries=[],
     datas=[
         ('assets', 'assets'),
-        ('version.json', '.'),
     ],
     hiddenimports=[],
     hookspath=[],

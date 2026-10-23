@@ -405,7 +405,22 @@
       // 官方接口超时，降级到 CDN 镜像探测
     }
 
-    // 优先级 2：国内加速镜像 API 容灾探测
+    // 优先级 2：同源部署的 version.json 静态高可用配置
+    try {
+      const res = await fetch('./version.json?t=' + Date.now(), { cache: 'no-cache' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.version) {
+          const rawUrl = data.download_url || `https://github.com/Fugui-Dai/LunaDimmer/releases/download/v${data.version}/LunaDimmer_v${data.version}.exe`;
+          applyDownloadLink(data.version, rawUrl, `LunaDimmer_v${data.version}.exe`);
+          return;
+        }
+      }
+    } catch (e) {
+      // 降级到镜像探测
+    }
+
+    // 优先级 3：国内加速镜像 API 容灾探测
     try {
       const mirrorRes = await fetch('https://ghfast.top/https://api.github.com/repos/Fugui-Dai/LunaDimmer/releases/latest');
       if (mirrorRes.ok) {

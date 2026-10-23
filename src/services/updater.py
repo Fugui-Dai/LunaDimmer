@@ -61,12 +61,15 @@ def is_safe_download_url(url: str) -> bool:
     except Exception:
         return False
 
-# 默认官方云端元数据发布检测源列表 (直连 GitHub Releases 官方发布体系与 CDN 容灾镜像)
+# 默认官方云端元数据发布检测源列表 (多源容灾通道：GitHub 302 重定向免流探针、Cloudflare Pages 与官方 API)
 DEFAULT_UPDATE_URLS = [
-    # 1. GitHub 官方 Releases 公共 API (直连 Releases 发布体系，第一时间感知发布)
+    # 1. GitHub 官方 Releases CDN 302 自动重定向探针（直连发布体系，零 403 频控，国内秒级感知）
+    "https://ghfast.top/https://github.com/Fugui-Dai/LunaDimmer/releases/latest",
+    "https://github.com/Fugui-Dai/LunaDimmer/releases/latest",
+    # 2. Cloudflare Pages 静态高可用节点与 Raw 备选通道
+    "https://lunadimmer.pages.dev/version.json",
+    # 3. GitHub 官方 REST API 备选通道
     "https://api.github.com/repos/Fugui-Dai/LunaDimmer/releases/latest",
-    # 2. GitHub 官方 Releases 加速镜像 (国内免代理直连)
-    "https://ghfast.top/https://api.github.com/repos/Fugui-Dai/LunaDimmer/releases/latest",
 ]
 DEFAULT_UPDATE_METADATA_URL = DEFAULT_UPDATE_URLS[0]
 
@@ -161,6 +164,27 @@ class UpdateWorker(QThread):
                 )
                 with urllib.request.urlopen(req, timeout=3.5) as response:
                     if response.status == 200:
+                        # 优先检测 302 重定向探针（直连 Releases 体系，100% 免疫 API 403 频控）
+                        real_url = response.geturl()
+                        tag_match = re.search(r"/releases/tag/([^/?#]+)", real_url)
+                        if tag_match:
+                            tag_str = tag_match.group(1).strip()
+                            remote_ver = tag_str.lstrip("vV")
+                            dl_url = f"https://github.com/Fugui-Dai/LunaDimmer/releases/download/{tag_str}/LunaDimmer_{tag_str}.exe"
+                            normalized_payload = {
+                                "version": remote_ver,
+                                "release_date": "",
+                                "download_url": dl_url,
+                                "file_size": "25 MB",
+                                "is_critical": False,
+                                "changelog": {
+                                    "zh-CN": "版本性能调优与体验升级",
+                                    "en-US": "Performance optimizations and improvements",
+                                },
+                            }
+                            self._emit_result(True, normalized_payload, "")
+                            return
+
                         raw_data = response.read().decode("utf-8")
                         data = json.loads(raw_data)
                         if isinstance(data, dict):
