@@ -1,11 +1,11 @@
 {
-  "version": "1.0.2",
+  "version": "1.0.4",
   "release_date": "2026-10-24",
-  "download_url": "https://github.com/Fugui-Dai/LunaDimmer/releases/download/v1.0.2/LunaDimmer_v1.0.2.exe",
+  "download_url": "https://github.com/Fugui-Dai/LunaDimmer/releases/download/v1.0.4/LunaDimmer_v1.0.4.exe",
   "file_size": "25 MB",
   "is_critical": false,
   "changelog": {
-    "zh-CN": "测试内容",
-    "en-US": "Test content"
+    "zh-CN": "1. 修复软件更新后无法自动重启的问题\n2. 修复下载进度条与百分比不同步的问题\n3. 优化更新提示体验，移除红点并在偏好设置提供高亮更新按钮\n4. 优化官网下载直链，点击即可直接下载安装包\n5. 修复设置窗口焦点异常问题",
+    "en-US": "1. Fixed app unable to auto-restart after update download\n2. Fixed progress bar jumping out of sync with download percentage\n3. Streamlined update UX by removing red dots and highlighting update CTA button\n4. Upgraded web direct download link to binary stream\n5. Fixed settings dialog focus and dismiss behavior"
   }
 }
