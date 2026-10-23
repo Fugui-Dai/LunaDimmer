@@ -1,0 +1,286 @@
+/* ==========================================================================
+   Luna Dimmer - 创新交互与高定动效系统 (Next-Gen High-End Animation Suite)
+   Inspired by Apple HIG, Linear.app, Raycast, and Dynamic Island Aesthetics
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. 基础动效关键帧与流光定义
+   -------------------------------------------------------------------------- */
+
+/* 标题流光字效 (Apple Style Text Shimmer) */
+@keyframes textShimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* 呼吸光晕 (Living Pulse) */
+@keyframes ambientPulse {
+  0%, 100% {
+    opacity: 0.12;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.22;
+    transform: scale(1.04);
+  }
+}
+
+/* 边框微光掠影 (Border Glint Sweep) */
+@keyframes borderGlintSweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  40% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. 导航栏滚动悬浮深度感与顶栏流光进度线
+   -------------------------------------------------------------------------- */
+header {
+  transition: background 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: background, box-shadow;
+}
+
+body.scrolled header {
+  background: rgba(7, 8, 11, 0.88);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+}
+
+.scroll-progress-line {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  width: 0%;
+  background: linear-gradient(90deg, #F5B338 0%, #FCD34D 45%, #38BDF8 100%);
+  box-shadow: 0 0 8px rgba(245, 179, 56, 0.6), 0 0 16px rgba(56, 189, 248, 0.4);
+  pointer-events: none;
+  z-index: 102;
+  transition: width 0.05s ease-out;
+  border-radius: 0 2px 2px 0;
+}
+
+/* --------------------------------------------------------------------------
+   3. 双向滚动微距进出场系统 (GPU-Accelerated Zero-Blur Reveal System)
+   -------------------------------------------------------------------------- */
+[data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 26px, 0);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+  backface-visibility: hidden;
+}
+
+[data-reveal].is-revealed {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+/* 横向微滑动入场 */
+[data-reveal="left"] {
+  transform: translate3d(-32px, 0, 0);
+}
+[data-reveal="left"].is-revealed {
+  transform: translate3d(0, 0, 0);
+}
+
+[data-reveal="right"] {
+  transform: translate3d(32px, 0, 0);
+}
+[data-reveal="right"].is-revealed {
+  transform: translate3d(0, 0, 0);
+}
+
+/* 阶梯延迟律动 (Apple/OpenAI Stagger Cascade) */
+[data-reveal-stagger="1"] { transition-delay: 60ms; }
+[data-reveal-stagger="2"] { transition-delay: 120ms; }
+[data-reveal-stagger="3"] { transition-delay: 180ms; }
+[data-reveal-stagger="4"] { transition-delay: 240ms; }
+[data-reveal-stagger="5"] { transition-delay: 300ms; }
+[data-reveal-stagger="6"] { transition-delay: 360ms; }
+
+/* --------------------------------------------------------------------------
+   4. Linear / Raycast 级光感鼠标动态追踪与微晶边框折射 (Spotlight Cards)
+   -------------------------------------------------------------------------- */
+.has-spotlight {
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.has-spotlight::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    420px circle at var(--mouse-x, -999px) var(--mouse-y, -999px),
+    rgba(245, 179, 56, 0.10),
+    rgba(56, 189, 248, 0.04) 40%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.has-spotlight:hover::before {
+  opacity: 1;
+}
+
+/* 边框微光随动 (Border Specular Glint) */
+.has-spotlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: radial-gradient(
+    300px circle at var(--mouse-x, -999px) var(--mouse-y, -999px),
+    rgba(245, 179, 56, 0.55),
+    rgba(56, 189, 248, 0.35) 35%,
+    transparent 70%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 2;
+}
+
+.has-spotlight:hover::after {
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   5. 仿真控制中心：稳固精准无抖动 (Stable & Pixel-Perfect Control Card)
+   -------------------------------------------------------------------------- */
+.workbench-card-wrapper {
+  position: relative;
+}
+
+.luna-control-card {
+  position: relative;
+  transform: none !important;
+  will-change: auto !important;
+  transition: box-shadow 0.25s ease !important;
+}
+
+.luna-control-card:hover {
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.70),
+              0 0 35px rgba(245, 179, 56, 0.10),
+              0 0 0 1px rgba(255, 255, 255, 0.16) inset !important;
+}
+
+.has-spotlight > * {
+  position: relative;
+  z-index: 3;
+}
+
+/* --------------------------------------------------------------------------
+   7. Hero 背景星尘微粒子画布 (Hero Cosmic Dust Canvas)
+   -------------------------------------------------------------------------- */
+.hero-cosmic-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.65;
+}
+
+.hero-section {
+  position: relative;
+}
+
+/* 标题流光增强 */
+.hero-title {
+  background: linear-gradient(
+    135deg,
+    #FFFFFF 0%,
+    #FFFFFF 30%,
+    #F5B338 50%,
+    #38BDF8 65%,
+    #FFFFFF 85%,
+    #CBD5E1 100%
+  ) !important;
+  background-size: 240% 100% !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  animation: textShimmer 10s ease-in-out infinite alternate;
+}
+
+/* --------------------------------------------------------------------------
+   8. 平滑平移与数字跳动 (Metric Numbers Counter)
+   -------------------------------------------------------------------------- */
+.metric-val span {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 快捷键表格行交错微亮 */
+.hotkey-table tbody tr {
+  transition: background 0.25s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hotkey-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.04);
+  transform: translateX(4px);
+}
+
+/* 常见问答展开/悬浮微妙微距感 */
+.faq-item {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.faq-item:hover {
+  transform: translateY(-3px);
+  background: rgba(26, 29, 38, 0.92) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+}
+
+/* --------------------------------------------------------------------------
+   9. 辅助功能：尊重用户减弱动态效果设置
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+  .hero-title {
+    animation: none !important;
+  }
+  .dynamic-luminary-island {
+    transition: opacity 0.2s ease !important;
+  }
+  .luna-control-card {
+    transition: none !important;
+    transform: none !important;
+  }
+}

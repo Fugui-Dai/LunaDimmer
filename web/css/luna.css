@@ -1,0 +1,2142 @@
+/* ==========================================================================
+   Luna Dimmer - Web Shell & Landing Rebuild (luna.css)
+   --------------------------------------------------------------------------
+   设计目标：
+   1. 进入页面第一屏即呈现「左侧 1:1 Windows 原生微晶控制面板」；
+   2. 整站统一为「月光 (Luna)」主题：深空夜色、月晕、星尘、琥珀月华；
+   3. 严格复用既有交互契约（capsule-* / preset-pill / chip-2x-btn / ID 不变），
+      只重构外壳、版式、材质与响应式，不破坏 simulator / modals / presets 逻辑。
+   本文件最后加载，作为页面外观的最终权威。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   0. Design Tokens
+   -------------------------------------------------------------------------- */
+:root {
+  --luna-void: #04060c;
+  --luna-ink: #070a13;
+  --luna-deep: #0a0f1d;
+  --luna-navy: #101830;
+
+  --luna-glass: rgba(17, 22, 36, 0.72);
+  --luna-glass-2: rgba(24, 30, 47, 0.58);
+  --luna-glass-3: rgba(255, 255, 255, 0.045);
+
+  --luna-hair: rgba(255, 255, 255, 0.08);
+  --luna-hair-mid: rgba(255, 255, 255, 0.14);
+  --luna-hair-strong: rgba(255, 255, 255, 0.26);
+
+  --luna-text: #f3f6ff;
+  --luna-text-2: #b7c2d9;
+  --luna-text-3: #78859f;
+
+  --luna-moon: #e8eeff;
+  --luna-moon-2: #b8c6e6;
+  --luna-amber: #f5b338;
+  --luna-amber-2: #ffd47e;
+  --luna-amber-deep: #c9891a;
+  --luna-amber-ghost: rgba(245, 179, 56, 0.14);
+  --luna-amber-line: rgba(245, 179, 56, 0.42);
+  --luna-blue: #7cc4ff;
+  --luna-emerald: #35d6a4;
+
+  --luna-radius-xl: 30px;
+  --luna-radius-lg: 24px;
+  --luna-radius-md: 16px;
+  --luna-radius-sm: 12px;
+  --luna-radius-pill: 999px;
+
+  --panel-w: 474px;
+  --panel-h: 652px;
+  --card-w: 446px;
+  --card-h: 620px;
+
+  --luna-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Segoe UI", "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+  --luna-mono: ui-monospace, SFMono-Regular, "SF Mono", "Cascadia Code", Consolas, monospace;
+
+  --luna-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* --------------------------------------------------------------------------
+   1. Base / Night Sky
+   -------------------------------------------------------------------------- */
+html {
+  scroll-behavior: smooth;
+  background: var(--luna-void);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  color: var(--luna-text);
+  font-family: var(--luna-font);
+  background-color: var(--luna-void);
+  background-image:
+    radial-gradient(1100px 620px at 12% -6%, rgba(122, 146, 208, 0.20), transparent 62%),
+    radial-gradient(900px 560px at 92% 2%, rgba(245, 179, 56, 0.09), transparent 60%),
+    radial-gradient(760px 760px at 6% 52%, rgba(150, 175, 240, 0.10), transparent 62%),
+    linear-gradient(180deg, #05070d 0%, #070a13 42%, #05070c 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 星尘微点：以多层 radial-gradient 绘制，零额外请求 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.55;
+  background-image:
+    radial-gradient(1.1px 1.1px at 18% 22%, rgba(255, 255, 255, 0.85), transparent 100%),
+    radial-gradient(1px 1px at 34% 68%, rgba(210, 224, 255, 0.65), transparent 100%),
+    radial-gradient(1.3px 1.3px at 52% 14%, rgba(255, 255, 255, 0.7), transparent 100%),
+    radial-gradient(1px 1px at 68% 46%, rgba(255, 240, 205, 0.6), transparent 100%),
+    radial-gradient(1.2px 1.2px at 82% 74%, rgba(226, 236, 255, 0.6), transparent 100%),
+    radial-gradient(1px 1px at 92% 28%, rgba(255, 255, 255, 0.5), transparent 100%),
+    radial-gradient(1px 1px at 8% 78%, rgba(255, 255, 255, 0.45), transparent 100%),
+    radial-gradient(1.4px 1.4px at 44% 92%, rgba(255, 224, 168, 0.45), transparent 100%);
+  animation: lunaTwinkle 9s ease-in-out infinite alternate;
+}
+
+@keyframes lunaTwinkle {
+  from { opacity: 0.34; }
+  to { opacity: 0.68; }
+}
+
+/* 胶片颗粒：给深空底色一层极细的物理质感，不干扰阅读 */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+}
+
+body.theme-light::after {
+  opacity: 0.018;
+}
+
+/* 环境光：保留既有 JS 动态写入的 inline background/opacity */
+.room-ambient {
+  opacity: 0.7;
+  filter: blur(10px);
+}
+
+.hero-cosmic-canvas {
+  position: fixed !important;
+  inset: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 1 !important;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+/* 全局光学仿真层保持最上层（指针穿透），连导航一起变暗，才是真正的全屏拟真 */
+.screen-dimmer-layer { z-index: 150; }
+.screen-warmth-layer { z-index: 151; }
+
+::selection {
+  background: rgba(245, 179, 56, 0.30);
+  color: #fff;
+}
+
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--luna-amber);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* --------------------------------------------------------------------------
+   3. Landing Stage Layout (APP FIRST)
+   -------------------------------------------------------------------------- */
+.luna-main {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.luna-workbench {
+  --s: 1;
+  position: relative;
+  display: grid;
+  grid-template-columns: calc(var(--panel-w) * var(--s)) minmax(0, 1fr);
+  grid-template-areas:
+    "intro intro"
+    "capL  capR"
+    "panel tele";
+  column-gap: clamp(12px, 1.2vw, 20px);
+  row-gap: clamp(8px, 1.2vh, 14px);
+  align-items: stretch;
+  align-content: start;
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: clamp(40px, 5vh, 64px) clamp(24px, 5vw, 72px) clamp(28px, 3.4vh, 40px);
+  background: none;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+/* 首屏中轴刻度：与各分区顶部的刻度形成一条完整的垂直轴线 */
+.luna-workbench::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  width: 1px;
+  height: 26px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(245, 179, 56, 0.55), transparent);
+  pointer-events: none;
+}
+
+/* 面板背后的月光晕：与左上方的月轮共同构成光源 */
+.workbench-card-wrapper::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(760px * var(--s));
+  height: calc(760px * var(--s));
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(214, 226, 255, 0.20) 0%,
+    rgba(150, 175, 240, 0.10) 36%,
+    rgba(122, 146, 208, 0.04) 58%,
+    transparent 72%
+  );
+  filter: blur(22px);
+  opacity: 0.9;
+  z-index: -1;
+}
+
+/* 3.1 LUNA 巨型字标：作为首屏页头的背景排版，向下渐隐 ------------------- */
+.luna-wordmark {
+  position: absolute;
+  left: 50%;
+  top: clamp(-100px, -7vh, -40px);
+  transform: translateX(-50%);
+  z-index: 1;
+  font-family: var(--luna-font);
+  font-size: clamp(180px, 30vw, 460px);
+  font-weight: 800;
+  line-height: 0.8;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(214, 226, 255, 0.12);
+  -webkit-mask-image: linear-gradient(180deg, #000 8%, rgba(0, 0, 0, 0.6) 55%, transparent 88%);
+  mask-image: linear-gradient(180deg, #000 8%, rgba(0, 0, 0, 0.6) 55%, transparent 88%);
+}
+
+.hero-intro,
+.workbench-grid,
+.workbench-card-wrapper,
+.luna-telemetry-panel {
+  position: relative;
+  z-index: 1;
+}
+
+/* 首屏入场：纯 CSS 动画，不依赖 JS —— 即使脚本异常，面板也一定可见 */
+@keyframes lunaRise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero-intro {
+  animation: lunaRise 0.85s var(--luna-ease) both;
+}
+
+.workbench-card-wrapper {
+  animation: lunaRise 0.95s var(--luna-ease) 0.06s both;
+}
+
+.luna-telemetry-panel {
+  animation: lunaRise 0.95s var(--luna-ease) 0.12s both;
+}
+
+/* 让网格内的卡片与遥测直接成为 stage 的 grid item */
+.workbench-grid {
+  display: contents;
+}
+
+/* 全站唯一 Toast（由 showWebToast 动态创建，样式集中在此） */
+#webToast {
+  position: fixed;
+  left: 50%;
+  bottom: 30px;
+  transform: translate(-50%, 12px);
+  z-index: 999999;
+  max-width: min(520px, calc(100vw - 32px));
+  padding: 10px 20px;
+  border-radius: 12px;
+  background: rgba(14, 17, 25, 0.96);
+  border: 1px solid var(--luna-amber-line);
+  color: #ffffff;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.5;
+  text-align: center;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s var(--luna-ease), transform 0.25s var(--luna-ease);
+}
+
+#webToast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+body.theme-light #webToast {
+  background: rgba(255, 255, 255, 0.98);
+  color: #0f172a;
+  border-color: rgba(217, 119, 6, 0.45);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18);
+}
+
+/* --------------------------------------------------------------------------
+   4. Hero Intro（品牌 / 主张 / CTA 一行式页头）
+   -------------------------------------------------------------------------- */
+.hero-intro {
+  grid-area: intro;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "brand"
+    "title";
+  justify-items: center;
+  align-items: center;
+  row-gap: 12px;
+  text-align: center;
+}
+
+/* 品牌锁定：LUNA DIMMER + 中文名 */
+.brand-lockup {
+  grid-area: brand;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px 16px;
+  margin: 0;
+}
+
+.brand-lockup .brand-mark {
+  order: 1;
+  font-family: var(--luna-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  color: var(--luna-text-3);
+}
+
+.brand-lockup .brand-primary {
+  order: 2;
+  color: var(--luna-moon);
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+}
+
+/* 英文界面下品牌名与字标重复，只保留字标 */
+html[lang="en-US"] .brand-lockup .brand-primary {
+  display: none;
+}
+
+/* 主标题：整页最大的字，独占一行 */
+.stage-main-title {
+  grid-area: title;
+  margin: 0;
+  max-width: 16em;
+  font-size: clamp(32px, 3.6vw, 56px);
+  line-height: 1.12;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+  color: var(--luna-moon);
+  text-wrap: balance;
+  font-feature-settings: "palt" 1;
+}
+
+html[lang="en-US"] .stage-main-title {
+  font-size: clamp(28px, 3.6vw, 48px);
+  letter-spacing: -0.03em;
+}
+
+/* 舞台标注：左栏与右栏各自对齐，不再用一句居中的说明 */
+.stage-caption {
+  grid-area: capL;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding-left: 2px;
+  transform: translateY(8px);
+  font-size: 11.5px;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  color: var(--luna-text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.stage-caption::before {
+  content: "";
+  flex: none;
+  width: 18px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(245, 179, 56, 0.65), rgba(245, 179, 56, 0));
+}
+
+.stage-caption-telemetry {
+  grid-area: capR;
+}
+
+.panel-download-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  height: 46px;
+  margin: 12px 0 0;
+  border-radius: 23px;
+  border: 1px solid rgba(255, 240, 210, 0.55);
+  background: linear-gradient(180deg, #ffdb92 0%, #f7b93f 46%, #e09a18 100%);
+  color: #1a1206;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  overflow: hidden;
+  box-shadow:
+    0 10px 24px rgba(245, 179, 56, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.62),
+    inset 0 -1px 0 rgba(120, 70, 0, 0.22);
+  transition: transform 0.2s var(--luna-ease), filter 0.2s var(--luna-ease),
+    box-shadow 0.2s var(--luna-ease);
+}
+
+.panel-download-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow:
+    0 16px 32px rgba(245, 179, 56, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    inset 0 -1px 0 rgba(120, 70, 0, 0.22);
+}
+
+.panel-download-btn:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
+}
+
+.panel-download-btn:focus-visible {
+  outline: 2px solid #fff3d0;
+  outline-offset: 2px;
+}
+
+.dl-arrow {
+  display: flex;
+  width: 15px;
+  height: 15px;
+  flex: none;
+  transition: transform 0.2s var(--luna-ease);
+}
+
+.panel-download-btn:hover .dl-arrow {
+  transform: translateY(2px);
+}
+
+.dl-label {
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* 一次性的高光扫过，只在 hover 时出现 */
+.panel-download-btn::after {
+  content: "";
+  position: absolute;
+  top: -40%;
+  bottom: -40%;
+  left: -30%;
+  width: 22%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  transform: skewX(-20deg);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.panel-download-btn:hover::after {
+  animation: dlSheen 0.7s var(--luna-ease);
+}
+
+@keyframes dlSheen {
+  0% { left: -30%; opacity: 0; }
+  15% { opacity: 0.9; }
+  100% { left: 115%; opacity: 0; }
+}
+
+.luna-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 24px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 0.2s var(--luna-ease), box-shadow 0.2s var(--luna-ease),
+    background 0.2s var(--luna-ease), color 0.2s var(--luna-ease);
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.luna-btn-primary {
+  color: #1a1206;
+  background: linear-gradient(180deg, #ffd98c 0%, #f5b338 58%, #e0a01f 100%);
+  box-shadow:
+    0 10px 30px rgba(245, 179, 56, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.luna-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 36px rgba(245, 179, 56, 0.32);
+}
+
+html[lang="en-US"] .section-title {
+  font-size: clamp(26px, 2.6vw, 40px);
+}
+
+/* --------------------------------------------------------------------------
+   5. LEFT: 1:1 Windows 原生微晶控制面板
+   -------------------------------------------------------------------------- */
+.workbench-card-wrapper {
+  grid-area: panel;
+  align-self: start;
+  justify-self: start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: calc(var(--panel-w) * var(--s));
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+
+/* 缩放外壳：始终保持 474 × 608 的桌面窗口占位（1:1） */
+.panel-scaler {
+  position: relative;
+  z-index: 1;
+  width: calc(var(--panel-w) * var(--s));
+  height: calc(var(--panel-h) * var(--s));
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  flex: none;
+}
+
+/* 446 × 576 原生卡片 + 14/16 外窗留白 = 474 × 608 */
+.luna-control-card {
+  position: relative;
+  width: var(--card-w);
+  height: var(--card-h);
+  min-height: var(--card-h);
+  max-width: none;
+  flex: none;
+  box-sizing: border-box;
+  margin: 16px auto 0;
+  padding: 20px;
+  border-radius: var(--luna-radius-lg);
+  background:
+    linear-gradient(158deg, rgba(44, 46, 53, 0.94) 0%, rgba(30, 32, 39, 0.97) 46%, rgba(20, 21, 27, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-top-color: rgba(255, 255, 255, 0.30);
+  box-shadow:
+    0 32px 80px rgba(0, 0, 0, 0.62),
+    0 2px 0 rgba(255, 255, 255, 0.05) inset,
+    0 0 60px rgba(150, 175, 240, 0.07);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 0;
+  user-select: none;
+  transform: scale(var(--s)) !important;
+  transform-origin: top center !important;
+  will-change: auto !important;
+  transition: box-shadow 0.3s var(--luna-ease), border-color 0.3s var(--luna-ease);
+  z-index: 1;
+}
+
+.luna-control-card:hover {
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  box-shadow:
+    0 38px 96px rgba(0, 0, 0, 0.68),
+    0 2px 0 rgba(255, 255, 255, 0.06) inset,
+    0 0 80px rgba(245, 179, 56, 0.10) !important;
+}
+
+.card-top-rim {
+  position: absolute;
+  top: -1px;
+  left: 12%;
+  width: 76%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  pointer-events: none;
+}
+
+/* 键盘焦点：桌面端面板获得焦点时给出克制的月华描边 */
+.luna-control-card:focus {
+  outline: none;
+}
+
+.luna-control-card:focus-visible {
+  outline: 2px solid rgba(245, 179, 56, 0.45);
+  outline-offset: 4px;
+}
+
+/* 5.1 Header ------------------------------------------------------------- */
+.mockup-header {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+}
+
+.mockup-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.mockup-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.celestial-orb {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  flex: none;
+  background: radial-gradient(circle, #ffe9bd 12%, #f5b338 58%, #b87414 100%);
+  box-shadow:
+    0 0 22px rgba(245, 179, 56, 0.55),
+    inset 0 0 8px rgba(255, 255, 255, 0.55);
+  transition: background 0.5s var(--luna-ease), box-shadow 0.5s var(--luna-ease);
+}
+
+.mockup-identity h4 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.window-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+}
+
+.ctrl-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.18s var(--luna-ease), filter 0.18s var(--luna-ease);
+}
+
+.ctrl-dot .ctrl-sym {
+  font-size: 8px;
+  line-height: 1;
+  font-weight: 900;
+  opacity: 0.9;
+}
+
+.ctrl-settings { background: #2ec44a; color: #00380b; }
+.ctrl-min { background: #ffbd2e; color: #543500; }
+.ctrl-close { background: #ff5f56; color: #4a0002; }
+
+.ctrl-dot:hover {
+  transform: scale(1.16);
+  filter: brightness(1.12);
+  box-shadow: none;
+}
+
+.mockup-header-sub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-left: 50px;
+  min-height: 25px;
+}
+
+.mockup-header-sub span#luminaryStatus {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: rgba(235, 235, 245, 0.75);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mockup-sub-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+
+.btn-mock-reset {
+  height: 25px;
+  padding: 0 12px;
+  border-radius: var(--luna-radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(235, 235, 245, 0.88);
+  font-size: 12.5px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  transition: all 0.2s var(--luna-ease);
+}
+
+.btn-mock-reset:hover {
+  background: var(--luna-amber-ghost);
+  border-color: var(--luna-amber-line);
+  color: var(--luna-amber-2);
+}
+
+.btn-mock-reset.rescue-glow {
+  background: rgba(245, 179, 56, 0.24) !important;
+  border: 1.5px solid var(--luna-amber) !important;
+  color: #fbbf24 !important;
+  font-weight: 700 !important;
+  box-shadow: 0 0 12px rgba(245, 179, 56, 0.45) !important;
+}
+
+.btn-mock-custom {
+  height: 24px !important;
+  padding: 0 12px !important;
+  border-radius: var(--luna-radius-pill) !important;
+  background: rgba(245, 179, 56, 0.14) !important;
+  border: 1px solid rgba(245, 179, 56, 0.40) !important;
+  color: #f5b338 !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+}
+
+.btn-mock-custom:hover {
+  background: rgba(245, 179, 56, 0.24) !important;
+  border-color: rgba(245, 179, 56, 0.65) !important;
+  color: #fbbf24 !important;
+}
+
+/* 5.2 Sliders ------------------------------------------------------------ */
+.slider-block {
+  margin: 0;
+}
+
+/* 严格复刻 PyQt addStretch(1) 的呼吸留白：四段约 36px 的弹性间距 */
+.mockup-header + .slider-block {
+  margin-top: 36px;
+}
+
+.slider-block + .slider-block {
+  margin-top: 36px;
+}
+
+.slider-meta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 24px;
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #cbd5e1;
+}
+
+.chip-2x-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: var(--luna-radius-pill);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #cbd5e1;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.22s var(--luna-ease);
+  white-space: nowrap;
+}
+
+.chip-2x-btn:hover {
+  background: rgba(255, 255, 255, 0.11);
+  color: #ffffff;
+}
+
+.chip-2x-btn.active {
+  background: rgba(245, 179, 56, 0.18);
+  border-color: rgba(245, 179, 56, 0.55);
+  color: var(--luna-amber-2);
+  box-shadow: 0 0 16px rgba(245, 179, 56, 0.22);
+}
+
+.capsule-track {
+  position: relative;
+  height: 44px;
+  border-radius: 22px;
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  overflow: hidden;
+  touch-action: none;
+}
+
+.capsule-track:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.capsule-bar {
+  position: absolute;
+  inset: 0 auto 0 0;
+  height: 100%;
+  border-radius: 22px;
+  background: linear-gradient(90deg, #cfd8e6 0%, #eef2fa 55%, #ffffff 100%);
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.32);
+  overflow: hidden;
+  pointer-events: none;
+  transition: width 0.04s linear;
+  z-index: 2;
+}
+
+#warmthTrack {
+  border-color: rgba(255, 159, 10, 0.20);
+}
+
+.warm-bar {
+  background: linear-gradient(90deg, #ff9f0a 0%, #ff8500 55%, #e66800 100%) !important;
+  box-shadow: 0 0 20px rgba(255, 149, 0, 0.45) !important;
+  border-right: none !important;
+}
+
+.capsule-bar.zero-width {
+  opacity: 0 !important;
+  box-shadow: none !important;
+}
+
+.capsule-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.capsule-layer-base {
+  z-index: 1;
+}
+
+.capsule-layer-base .capsule-icon,
+.capsule-layer-base span {
+  font-size: 15px;
+  color: #edf1fa;
+}
+
+.capsule-layer-base .val-light {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #edf1fa;
+  font-variant-numeric: tabular-nums;
+}
+
+.capsule-layer-clip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 414px;
+  pointer-events: none;
+}
+
+.capsule-layer-fill {
+  z-index: 3;
+}
+
+.capsule-layer-fill .capsule-icon,
+.capsule-layer-fill span {
+  font-size: 15px;
+  color: #16181d;
+}
+
+.capsule-layer-fill .val-dark {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #16181d;
+  font-variant-numeric: tabular-nums;
+}
+
+.candle-icon {
+  font-size: 17px !important;
+}
+
+/* 5.3 Presets ------------------------------------------------------------ */
+.panel-presets-header,
+.presets-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 24px;
+  margin: 36px 0 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #cbd5e1;
+}
+
+.presets-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 8px;
+}
+
+.presets-row:last-of-type {
+  margin-bottom: 0;
+}
+
+.preset-pill {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 0 6px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: #cbd5e1;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.2s var(--luna-ease);
+}
+
+.preset-pill:hover {
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.20);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.preset-pill.active {
+  background: rgba(245, 179, 56, 0.18);
+  border-color: rgba(245, 179, 56, 0.70);
+  color: var(--luna-amber-2);
+  box-shadow: 0 0 18px rgba(245, 179, 56, 0.18);
+}
+
+/* 5.4 Stealth card ------------------------------------------------------- */
+.stealth-action-card {
+  height: 54px;
+  margin: auto 0 0;
+  padding: 8px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  border-radius: 13px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-top-color: rgba(255, 255, 255, 0.24);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.075) 0%, rgba(255, 255, 255, 0.025) 100%);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.22s var(--luna-ease);
+}
+
+.stealth-action-card:hover {
+  background: linear-gradient(135deg, rgba(255, 195, 80, 0.16) 0%, rgba(255, 160, 40, 0.05) 100%);
+  border-color: rgba(255, 195, 80, 0.48);
+  border-top-color: rgba(255, 215, 120, 0.70);
+  transform: translateY(-1px);
+}
+
+.stealth-action-title {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 18px;
+  color: #e6e6ec;
+}
+
+.stealth-action-sub {
+  font-size: 11.5px;
+  line-height: 16px;
+  color: #94a3b8;
+}
+
+/* 5.5 Keyboard guide：面板下方的悬浮说明，不占布局高度 -------------------- */
+.keyboard-guide-bar {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: -24px;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--luna-text-3);
+  font-size: 10.5px;
+  line-height: 1.5;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.keyboard-guide-bar kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #e7ecf7;
+  font-family: var(--luna-mono);
+  font-size: 10.5px;
+}
+
+/* --------------------------------------------------------------------------
+   6. Telemetry Dashboard（右侧工程仪表盘，与面板等高）
+   -------------------------------------------------------------------------- */
+.luna-telemetry-panel {
+  grid-area: tele;
+  align-self: stretch;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "thead"
+    "tmetrics"
+    "tgamma"
+    "tpipe";
+  gap: clamp(12px, 1.8vh, 18px);
+  width: 100%;
+  max-width: none;
+  height: calc(var(--card-h) * var(--s));
+  min-height: 0;
+  margin: 16px 0 0;
+  padding: 24px 26px 20px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(13, 17, 27, 0.72) 0%, rgba(8, 11, 18, 0.82) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top-color: rgba(255, 255, 255, 0.16);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+/* 仪表盘底纹：极淡工程网格 */
+.luna-telemetry-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(120% 120% at 28% 0%, #000 30%, transparent 82%);
+  mask-image: radial-gradient(120% 120% at 28% 0%, #000 30%, transparent 82%);
+  opacity: 0.7;
+}
+
+.luna-telemetry-panel::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 14%;
+  right: 14%;
+  height: 1px;
+  z-index: 2;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(124, 196, 255, 0.35) 30%,
+    rgba(245, 179, 56, 0.40) 70%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+.luna-telemetry-panel > div {
+  display: contents;
+}
+
+.telemetry-header {
+  grid-area: thead;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0;
+  border-bottom: none;
+}
+
+.telemetry-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.telemetry-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--luna-emerald);
+  box-shadow: 0 0 10px rgba(53, 214, 164, 0.9);
+  flex: none;
+}
+
+.telemetry-title {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--luna-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.telemetry-tag {
+  flex: none;
+  font-family: var(--luna-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--luna-text-3);
+  white-space: nowrap;
+}
+
+.telemetry-metrics-grid,
+.gamma-canvas-box,
+.pipeline-monitor-box {
+  position: relative;
+  z-index: 1;
+}
+
+.telemetry-metrics-grid {
+  grid-area: tmetrics;
+  align-self: stretch;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.metric-cell {
+  padding: 13px 16px 14px;
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: none;
+  border-radius: 0;
+  background: none;
+  transition: background 0.25s var(--luna-ease);
+}
+
+.metric-cell:last-child {
+  border-right: none;
+}
+
+.metric-cell:hover {
+  background: rgba(255, 255, 255, 0.025);
+  border-color: rgba(255, 255, 255, 0.07);
+  transform: none;
+  box-shadow: none;
+}
+
+.metric-label {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 3px 6px;
+  margin-bottom: 7px;
+  font-family: var(--luna-mono);
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--luna-text-3);
+  white-space: normal;
+  line-height: 1.45;
+}
+
+.metric-label > span:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.metric-val {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: clamp(22px, 2vw, 30px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.metric-unit {
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--luna-text-3);
+}
+
+.metric-sub {
+  margin-top: 6px;
+  font-size: 9.5px;
+  line-height: 1.45;
+  color: #67738c;
+  white-space: normal;
+}
+
+.gamma-canvas-box {
+  grid-area: tgamma;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0;
+  padding: 12px 16px 14px;
+  border-radius: 14px;
+  background: radial-gradient(120% 140% at 50% 0%, rgba(96, 165, 250, 0.06), transparent 60%), #03060c;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+/* 示波器扫描线 */
+.gamma-canvas-box::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 18%;
+  height: 1px;
+  z-index: 2;
+  background: linear-gradient(90deg, transparent, rgba(96, 165, 250, 0.26), transparent);
+  opacity: 0;
+  pointer-events: none;
+  animation: scopeScan 7s linear infinite;
+}
+
+@keyframes scopeScan {
+  0% { top: 18%; opacity: 0; }
+  10% { opacity: 0.8; }
+  90% { opacity: 0.8; }
+  100% { top: 92%; opacity: 0; }
+}
+
+.gamma-canvas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-bottom: 9px;
+  font-family: var(--luna-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--luna-text-3);
+  white-space: normal;
+}
+
+#gammaHeaderTitle {
+  display: block;
+  font-family: var(--luna-font);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+  color: var(--luna-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gamma-canvas-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  font-family: var(--luna-mono);
+  font-size: 9.5px;
+  letter-spacing: 0;
+}
+
+#gammaCanvas {
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 0;
+  min-height: 110px;
+  border-radius: 9px;
+  background: rgba(3, 6, 12, 0.7);
+}
+
+.pipeline-monitor-box {
+  grid-area: tpipe;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
+  background: none;
+  font-family: var(--luna-mono);
+  font-size: 9.5px;
+  color: var(--luna-text-2);
+}
+
+.pipeline-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 11px 14px 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: none;
+}
+
+.pipeline-row:last-child {
+  border-right: none;
+}
+
+.pipeline-row > span:first-child {
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--luna-text-3);
+  white-space: normal;
+  line-height: 1.4;
+}
+
+.pipeline-row > span:first-child::before {
+  content: "●";
+  margin-right: 5px;
+  font-size: 7px;
+  color: var(--luna-emerald);
+  vertical-align: 1px;
+}
+
+.pipeline-row > span:last-child {
+  flex: none;
+  font-size: 9.5px;
+  line-height: 1.4;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.pipe-status-active {
+  color: var(--luna-emerald);
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   7. Editorial Sections
+   -------------------------------------------------------------------------- */
+.luna-section {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1560px;
+  margin: 0 auto;
+  padding: clamp(48px, 6vh, 80px) clamp(24px, 5vw, 72px);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* 分区中轴刻度：把全站内容收束到一条垂直中线上 */
+.luna-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 30px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(245, 179, 56, 0.55), transparent);
+  pointer-events: none;
+}
+
+.luna-section .section-header {
+  display: block;
+  max-width: 960px;
+  margin: 0 auto clamp(30px, 4vh, 44px);
+  text-align: center;
+}
+
+.section-title {
+  margin: 0 0 14px;
+  font-size: clamp(26px, 2.6vw, 40px);
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--luna-moon);
+}
+
+.section-desc {
+  margin: 0 auto;
+  max-width: 640px;
+  font-size: 14.5px;
+  line-height: 1.8;
+  color: var(--luna-text-2);
+}
+
+/* 7.1 Features：标题在上、说明在下的长文列表 */
+.bento-grid {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.bento-card {
+  display: block;
+  padding: clamp(22px, 3.2vh, 34px) 0;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.bento-card:hover {
+  transform: none;
+  background: none;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}
+
+.bento-card > div {
+  display: block;
+}
+
+.bento-tag {
+  margin: 0 0 10px;
+  font-family: var(--luna-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--luna-text-3);
+}
+
+.bento-card h3 {
+  margin: 0 0 12px;
+  font-size: clamp(20px, 1.8vw, 26px);
+  line-height: 1.32;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--luna-moon);
+}
+
+.bento-card p {
+  margin: 0;
+  max-width: 100%;
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--luna-text-2);
+}
+
+.bento-card p:last-child {
+  margin-bottom: 0;
+}
+
+.bento-card code {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-family: var(--luna-mono);
+  font-size: 12px;
+  color: #ffd9a1;
+}
+
+.compare-bar-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(20px, 4vw, 48px);
+  margin: 22px 0 0;
+  padding: 18px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 0;
+  background: none;
+}
+
+.compare-box {
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.compare-bad strong { color: #ef8080; }
+.compare-good strong { color: var(--luna-amber-2); }
+
+/* 7.2 Hotkeys：无卡片化表盘 */
+.hotkey-container {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
+  background: none;
+  overflow: visible;
+  box-shadow: none;
+}
+
+.hotkey-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.hotkey-table th {
+  padding: 12px 10px;
+  text-align: left;
+  font-family: var(--luna-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--luna-text-3);
+  background: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hotkey-table td {
+  padding: 16px 10px;
+  color: var(--luna-text-2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  vertical-align: middle;
+}
+
+.hotkey-table tbody tr {
+  transition: background 0.25s var(--luna-ease);
+}
+
+.hotkey-table tbody tr:hover {
+  transform: none;
+}
+
+.hotkey-table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.hotkey-table tbody tr td:nth-child(2) b {
+  color: #ffffff;
+  font-weight: 650;
+}
+
+.hotkey-table tbody tr td:first-child {
+  width: 38%;
+}
+
+.kbd-btn {
+  display: inline-block;
+  padding: 4px 10px;
+  margin: 2px 0;
+  border-radius: 5px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom-color: rgba(0, 0, 0, 0.45);
+  color: #f4f7ff;
+  font-family: var(--luna-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+}
+
+/* 7.3 FAQ：问题在上、回答在下的问答列表 */
+.faq-grid {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.faq-item {
+  display: block;
+  padding: clamp(20px, 3vh, 28px) 0;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
+  background: none;
+}
+
+/* 最后一条不再画线，避免和页脚顶线形成双线 */
+#faq .faq-item:last-child {
+  border-bottom: none;
+}
+
+/* FAQ 是最后一屏，底部不再叠加一层分区留白，交给页脚顶线收口 */
+#faq {
+  padding-bottom: 0;
+}
+
+.faq-item:hover {
+  transform: none;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: none !important;
+  box-shadow: none;
+}
+
+.faq-item h4 {
+  margin: 0 0 8px;
+  font-size: clamp(15px, 1.4vw, 18px);
+  line-height: 1.55;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--luna-moon);
+}
+
+.faq-item p {
+  margin: 0;
+  max-width: 100%;
+  font-size: 14px;
+  line-height: 1.85;
+  color: var(--luna-text-2);
+}
+
+.faq-item b {
+  color: var(--luna-amber-2);
+  font-weight: 650;
+}
+
+/* --------------------------------------------------------------------------
+   8. Footer（居中站点页脚）
+   -------------------------------------------------------------------------- */
+.site-footer {
+  position: relative;
+  z-index: 2;
+  padding: clamp(18px, 2.4vh, 26px) clamp(24px, 5vw, 72px);
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  background: linear-gradient(180deg, rgba(6, 9, 16, 0.10), rgba(4, 6, 11, 0.55));
+}
+
+.footer-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--luna-text-3);
+}
+
+.footer-sep {
+  opacity: 0.45;
+}
+
+/* --------------------------------------------------------------------------
+   9. Theme Variants
+   -------------------------------------------------------------------------- */
+
+/* 9.1 ☀️ Light：白夜雪瓷 */
+body.theme-light {
+  color: #0f172a;
+  background-color: #eef2f8;
+  background-image:
+    radial-gradient(1100px 620px at 10% -8%, rgba(255, 255, 255, 0.95), transparent 60%),
+    radial-gradient(900px 560px at 94% 0%, rgba(245, 179, 56, 0.16), transparent 58%),
+    linear-gradient(180deg, #f7f9fd 0%, #eef2f8 46%, #e9eef6 100%);
+}
+
+body.theme-light::before {
+  opacity: 0.22;
+  background-image:
+    radial-gradient(1.2px 1.2px at 18% 22%, rgba(120, 140, 180, 0.55), transparent 100%),
+    radial-gradient(1px 1px at 62% 64%, rgba(150, 120, 60, 0.35), transparent 100%),
+    radial-gradient(1px 1px at 84% 30%, rgba(120, 140, 180, 0.45), transparent 100%);
+}
+
+body.theme-light .brand-lockup .brand-mark { color: #8190ab; }
+body.theme-light .brand-lockup .brand-primary { color: #0f172a; }
+
+body.theme-light .stage-main-title,
+body.theme-light .section-title {
+  color: #0f172a;
+}
+
+body.theme-light .hero-cosmic-canvas {
+  opacity: 0.28;
+}
+
+body.theme-light .section-desc,
+body.theme-light .bento-card p,
+body.theme-light .faq-item p {
+  color: #475569;
+}
+
+body.theme-light .stage-caption { color: #64748b; }
+
+body.theme-light .bento-tag { color: #64748b; }
+body.theme-light .bento-card h3,
+body.theme-light .faq-item h4 { color: #0f172a; }
+
+body.theme-light .workbench-card-wrapper::before {
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(214, 226, 244, 0.55) 36%,
+    transparent 70%
+  );
+}
+
+body.theme-light .luna-wordmark {
+  -webkit-text-stroke-color: rgba(15, 23, 42, 0.08);
+}
+
+body.theme-light .luna-telemetry-panel {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(248, 250, 253, 0.9) 100%);
+  border-color: rgba(15, 23, 42, 0.08);
+  border-top-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.10);
+}
+
+body.theme-light .telemetry-title { color: #0f172a; }
+body.theme-light .telemetry-tag { color: #64748b; }
+body.theme-light .metric-cell { background: transparent; border-color: rgba(15, 23, 42, 0.07); }
+body.theme-light .metric-cell:hover { background: rgba(15, 23, 42, 0.02); }
+body.theme-light .metric-val { color: #0f172a; }
+body.theme-light .metric-label,
+body.theme-light .metric-unit,
+body.theme-light .metric-sub { color: #64748b; }
+body.theme-light .gamma-canvas-box {
+  background: rgba(15, 23, 42, 0.03);
+  border-color: rgba(15, 23, 42, 0.07);
+}
+body.theme-light .gamma-canvas-header { color: #64748b; }
+body.theme-light #gammaCanvas { background-color: rgba(255, 255, 255, 0.7); }
+body.theme-light .pipeline-monitor-box { border-top-color: rgba(15, 23, 42, 0.07); }
+body.theme-light .pipeline-row { border-right-color: rgba(15, 23, 42, 0.07); }
+body.theme-light .pipeline-row > span:first-child { color: #64748b; }
+body.theme-light .pipeline-row > span:last-child { color: #334155; }
+
+body.theme-light .bento-grid,
+body.theme-light .hotkey-container,
+body.theme-light .faq-grid {
+  background: none;
+  box-shadow: none;
+  border-top-color: rgba(15, 23, 42, 0.08);
+}
+
+body.theme-light .bento-card,
+body.theme-light .faq-item {
+  background: none;
+  box-shadow: none;
+  border-bottom-color: rgba(15, 23, 42, 0.08);
+}
+
+body.theme-light .hotkey-table th { color: #64748b; background: none; border-bottom-color: rgba(15, 23, 42, 0.08); }
+body.theme-light .hotkey-table td { color: #334155; border-bottom-color: rgba(15, 23, 42, 0.07); }
+body.theme-light .hotkey-table tbody tr td:nth-child(2) b { color: #0f172a; }
+body.theme-light .kbd-btn { background: #fff; border-color: rgba(15, 23, 42, 0.16); color: #0f172a; box-shadow: 0 1px 0 rgba(15, 23, 42, 0.1); }
+
+body.theme-light .compare-bar-wrap { background: none; border-top-color: rgba(15, 23, 42, 0.08); }
+
+body.theme-light .bento-card code {
+  background: rgba(15, 23, 42, 0.055);
+  border-color: rgba(15, 23, 42, 0.10);
+  color: #9a5b00;
+}
+
+body.theme-light .keyboard-guide-bar {
+  background: rgba(15, 23, 42, 0.035);
+  border-color: rgba(15, 23, 42, 0.08);
+  color: #64748b;
+}
+
+body.theme-light .keyboard-guide-bar kbd {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.16);
+  color: #0f172a;
+}
+
+body.theme-light .bento-card:hover,
+body.theme-light .faq-item:hover {
+  background: none !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+  box-shadow: none !important;
+}
+
+body.theme-light .luna-section { border-top-color: rgba(15, 23, 42, 0.07); }
+
+/* 浅色页脚 */
+body.theme-light .site-footer {
+  border-top-color: rgba(15, 23, 42, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(238, 242, 248, 0.92));
+}
+
+body.theme-light .footer-bottom { color: #64748b; }
+
+/* 9.2 ☀️ 浅色控制面板（1:1 雪瓷白） */
+.luna-control-card.theme-light {
+  background: linear-gradient(158deg, rgba(255, 255, 255, 0.98) 0%, rgba(246, 248, 252, 0.97) 52%, rgba(238, 242, 249, 0.98) 100%) !important;
+  border-color: rgba(15, 23, 42, 0.12) !important;
+  border-top-color: rgba(255, 255, 255, 0.95) !important;
+  box-shadow:
+    0 30px 70px rgba(15, 23, 42, 0.16),
+    0 0 0 1px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+.luna-control-card.theme-light .card-top-rim {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent);
+}
+
+.luna-control-card.theme-light .mockup-identity h4 { color: #0f172a; }
+.luna-control-card.theme-light .mockup-header-sub span#luminaryStatus { color: rgba(60, 60, 67, 0.75); }
+
+.luna-control-card.theme-light .btn-mock-reset {
+  background: rgba(15, 23, 42, 0.04);
+  border-color: rgba(15, 23, 42, 0.10);
+  color: #334155;
+}
+.luna-control-card.theme-light .btn-mock-reset:hover {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(217, 119, 6, 0.45);
+  color: #b45309;
+}
+
+.luna-control-card.theme-light .btn-mock-custom {
+  background: rgba(245, 179, 56, 0.16) !important;
+  border-color: rgba(217, 119, 6, 0.35) !important;
+  color: #b45309 !important;
+}
+.luna-control-card.theme-light .slider-meta-bar,
+.luna-control-card.theme-light .presets-header-row { color: #334155; }
+.luna-control-card.theme-light .chip-2x-btn {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.10);
+  color: #334155;
+}
+.luna-control-card.theme-light .chip-2x-btn.active {
+  background: rgba(245, 179, 56, 0.20);
+  border-color: rgba(217, 119, 6, 0.55);
+  color: #b45309;
+}
+.luna-control-card.theme-light .capsule-track {
+  background: rgba(15, 23, 42, 0.055);
+  border-color: rgba(15, 23, 42, 0.10);
+}
+.luna-control-card.theme-light .capsule-layer-base .capsule-icon,
+.luna-control-card.theme-light .capsule-layer-base span { color: #334155; }
+.luna-control-card.theme-light .preset-pill {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.10);
+  color: #0f172a;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+}
+.luna-control-card.theme-light .preset-pill:hover {
+  background: #f8fafc;
+  border-color: rgba(15, 23, 42, 0.2);
+}
+.luna-control-card.theme-light .preset-pill.active {
+  background: rgba(245, 179, 56, 0.18);
+  border-color: #d97706;
+  color: #b45309;
+}
+.luna-control-card.theme-light .stealth-action-card {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.035) 0%, rgba(15, 23, 42, 0.01) 100%);
+  border-color: rgba(15, 23, 42, 0.10);
+  border-top-color: rgba(255, 255, 255, 0.9);
+}
+.luna-control-card.theme-light .stealth-action-title { color: #1e293b; }
+.luna-control-card.theme-light .stealth-action-sub { color: #64748b; }
+
+/* 9.3 💧 Liquid Glass */
+body.theme-liquid-glass {
+  background-image:
+    radial-gradient(1100px 620px at 14% -4%, rgba(120, 190, 255, 0.20), transparent 62%),
+    radial-gradient(900px 560px at 90% 4%, rgba(180, 160, 255, 0.14), transparent 60%),
+    linear-gradient(180deg, #05080f 0%, #070b16 48%, #04060c 100%);
+}
+
+body.theme-liquid-glass .luna-control-card,
+.luna-control-card.theme-liquid-glass {
+  background: linear-gradient(150deg, rgba(40, 62, 96, 0.62) 0%, rgba(20, 32, 54, 0.72) 52%, rgba(9, 15, 27, 0.82) 100%) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  border-top-color: rgba(255, 255, 255, 0.6) !important;
+  box-shadow:
+    0 34px 90px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 0 70px rgba(124, 196, 255, 0.16) !important;
+  backdrop-filter: blur(34px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(34px) saturate(190%) !important;
+}
+
+.luna-control-card.theme-liquid-glass .mockup-identity h4 { color: #ffffff; }
+.luna-control-card.theme-liquid-glass .mockup-header-sub span#luminaryStatus { color: #bae6fd; }
+.luna-control-card.theme-liquid-glass .sub-row,
+.luna-control-card.theme-liquid-glass .slider-meta-bar,
+.luna-control-card.theme-liquid-glass .presets-header-row { color: #e0f2fe; }
+.luna-control-card.theme-liquid-glass .btn-mock-reset {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #e0f2fe;
+}
+.luna-control-card.theme-liquid-glass .preset-pill {
+  background: rgba(255, 255, 255, 0.075);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #e0f2fe;
+}
+.luna-control-card.theme-liquid-glass .preset-pill.active {
+  background: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+}
+.luna-control-card.theme-liquid-glass .capsule-track { background: rgba(0, 0, 0, 0.30); }
+.luna-control-card.theme-liquid-glass .stealth-action-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* --------------------------------------------------------------------------
+   10. Responsive
+   -------------------------------------------------------------------------- */
+@media (max-width: 1280px) {
+  .stage-main-title { font-size: clamp(30px, 3.8vw, 48px); }
+}
+
+@media (max-width: 1180px) {
+  .luna-workbench {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "intro"
+      "capL"
+      "panel"
+      "capR"
+      "tele";
+    row-gap: 22px;
+    justify-items: center;
+    padding-top: 40px;
+    --s: 0.9;
+  }
+
+  .stage-caption {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .brand-lockup { justify-content: center; }
+  .stage-main-title { font-size: clamp(28px, 4.6vw, 44px); }
+  .workbench-card-wrapper { justify-self: center; }
+  .luna-telemetry-panel {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    margin-top: 0;
+  }
+  #gammaCanvas {
+    flex: none;
+    height: 150px;
+  }
+  .luna-wordmark { display: none; }
+}
+
+@media (max-width: 860px) {
+  .bento-card { padding: 26px 0; }
+  .compare-bar-wrap { gap: 24px; }
+
+  .luna-telemetry-panel {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas:
+      "thead"
+      "tmetrics"
+      "tgamma"
+      "tpipe";
+    gap: 20px;
+    padding: 22px 20px;
+    min-height: 0;
+  }
+
+  .pipeline-monitor-box { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pipeline-row:nth-child(2) { border-right: none; }
+  .pipeline-row:nth-child(3),
+  .pipeline-row:nth-child(4) { border-top: 1px solid rgba(255, 255, 255, 0.07); }
+}
+
+@media (max-width: 760px) {
+  .luna-workbench {
+    padding-left: 16px;
+    padding-right: 16px;
+    --s: 0.78;
+  }
+
+  .stage-main-title { font-size: clamp(26px, 7.6vw, 38px); }
+  .stage-caption { font-size: 11px; }
+  .keyboard-guide-bar { display: none; }
+  .luna-section { padding-left: 16px; padding-right: 16px; }
+
+  .compare-bar-wrap { grid-template-columns: 1fr; }
+
+  .hotkey-table th,
+  .hotkey-table td { padding: 12px 8px; font-size: 12px; }
+  .hotkey-table th:nth-child(3),
+  .hotkey-table td:nth-child(3) { display: none; }
+
+  .telemetry-metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .metric-cell { border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
+  .metric-cell:nth-child(2n) { border-right: none; }
+  .metric-cell:nth-child(n + 3) { border-bottom: none; }
+  .metric-sub { display: none; }
+  #gammaCanvas { height: 96px; }
+
+  .site-footer { padding-left: 16px; padding-right: 16px; }
+}
+
+@media (max-width: 420px) {
+  .luna-workbench { --s: 0.66; }
+  .stage-main-title { font-size: clamp(24px, 8.4vw, 32px); }
+}
+
+/* 短屏：面板整体等比缩小，保证首屏完整可见 */
+@media (min-width: 1181px) and (max-height: 820px) {
+  .luna-telemetry-panel { gap: 18px 26px; padding: 20px 24px 18px; }
+}
+
+@media (min-width: 1181px) and (max-height: 900px) {
+  .luna-workbench { --s: 0.92; }
+}
+
+@media (min-width: 1181px) and (max-height: 840px) {
+  .luna-workbench { --s: 0.86; }
+}
+
+@media (min-width: 1181px) and (max-height: 780px) {
+  .luna-workbench { --s: 0.78; }
+}
+
+@media (min-width: 1181px) and (max-height: 720px) {
+  .luna-workbench { --s: 0.7; }
+  .pipeline-monitor-box { display: none; }
+}
+
+@media (min-width: 1181px) and (max-height: 660px) {
+  .luna-workbench { --s: 0.62; }
+  .stage-caption { display: none; }
+}
+
+/* --------------------------------------------------------------------------
+   11. Motion Preferences
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  body::before { animation: none; }
+  .gamma-canvas-box::after { animation: none; display: none; }
+  .hero-intro,
+  .workbench-card-wrapper,
+  .luna-telemetry-panel { animation: none !important; }
+  .luna-control-card,
+  .preset-pill,
+  .bento-card,
+  .faq-item,
+  .luna-btn { transition: none !important; }
+}

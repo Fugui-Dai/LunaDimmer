@@ -1,0 +1,26 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Pytest & IDE
+.pytest_cache/
+.vscode/
+.idea/
+
+# PyInstaller / Distribution
+build/
+dist/
+*.exe
+!LunaDimmer.spec
+
+# Superpowers temporary workspace
+.superpowers/
+
+# Local config cache
+config.json
+
+# Runtime Feedback Logs & User data
+feedback_logs/
+src/ui/feedback_logs/
+*.log

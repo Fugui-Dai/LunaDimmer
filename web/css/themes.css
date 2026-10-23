@@ -1,0 +1,1742 @@
+/* ==========================================================================
+   Luna Dimmer - 官方主题外观系统 (Theme System)
+   支持三大官方拟物美学：🌙 深色 (Dark) | ☀️ 浅色 (Light) | 💧 液态玻璃 (Liquid Glass)
+
+   职责边界（去重后）：
+   - 页面级组件（控制面板 / 胶囊滑块 / 场景药丸 / 遥测 / 管道日志）的权威实现
+     已统一迁移至 luna.css，本文件不再新增同类规则；
+   - 本文件保留三套主题的调色变体与弹窗专属主题规则。
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. ☀️ 浅色主题 (Light Theme - Apple Snow White Porcelain Glass)
+   -------------------------------------------------------------------------- */
+/* 控制面板自身的浅色样式统一由 luna.css 的 .luna-control-card.theme-light 负责，
+   此处不再保留一套 .luna-card 的重复实现。 */
+
+    /* Light Theme: Telemetry Panel */
+    body.theme-light .luna-telemetry-panel {
+      background: rgba(255, 255, 255, 0.95) !important;
+      border: 1px solid rgba(0, 0, 0, 0.08) !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.95) !important;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.06), 0 0 1px rgba(0, 0, 0, 0.12) !important;
+    }
+    body.theme-light .telemetry-header {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+    }
+    body.theme-light .telemetry-title {
+      color: #1D1D1F !important;
+    }
+    body.theme-light .telemetry-tag {
+      color: rgba(60, 60, 67, 0.65) !important;
+      background: rgba(0, 0, 0, 0.05) !important;
+    }
+    body.theme-light .metric-cell {
+      background: rgba(0, 0, 0, 0.03) !important;
+      border: 1px solid rgba(0, 0, 0, 0.06) !important;
+    }
+    body.theme-light .metric-cell:hover {
+      border-color: rgba(0, 0, 0, 0.14) !important;
+    }
+    body.theme-light .metric-label {
+      color: rgba(60, 60, 67, 0.70) !important;
+    }
+    body.theme-light .metric-val {
+      color: #1D1D1F !important;
+    }
+    body.theme-light .metric-unit,
+    body.theme-light .metric-sub {
+      color: rgba(60, 60, 67, 0.60) !important;
+    }
+    body.theme-light .pipeline-monitor-box {
+      background: #F8F8FA !important;
+      border: 1px solid rgba(0, 0, 0, 0.08) !important;
+      color: #334155 !important;
+    }
+    body.theme-light .gamma-canvas-box {
+      background: #F8F8FA !important;
+      border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    }
+    body.theme-light .gamma-canvas-header {
+      color: #1D1D1F !important;
+    }
+
+    /* Liquid Glass Theme: Telemetry Panel */
+    body.theme-liquid-glass .luna-telemetry-panel {
+      background: rgba(22, 26, 38, 0.58) !important;
+      backdrop-filter: blur(40px) saturate(210%) !important;
+      -webkit-backdrop-filter: blur(40px) saturate(210%) !important;
+      border: 1px solid rgba(255, 255, 255, 0.18) !important;
+      border-top: 1.5px solid rgba(255, 255, 255, 0.60) !important;
+      box-shadow: 0 28px 72px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.50) !important;
+    }
+    body.theme-liquid-glass .telemetry-title {
+      color: #FFFFFF !important;
+    }
+    body.theme-liquid-glass .metric-cell {
+      background: rgba(255, 255, 255, 0.06) !important;
+      border: 1px solid rgba(255, 255, 255, 0.14) !important;
+    }
+    body.theme-liquid-glass .pipeline-monitor-box {
+      background: rgba(14, 18, 28, 0.75) !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      color: #E2E8F0 !important;
+    }
+    body.theme-liquid-glass .gamma-canvas-box {
+      background: rgba(14, 18, 28, 0.75) !important;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    }
+      color: #64748B !important;
+    }
+
+    /* Window Controls Group (Chinese habit: Settings, Min, Close on rightmost, transparent background, glyphs visible by default) */
+    .window-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0;
+      background: transparent;
+      border: none;
+      user-select: none;
+      position: relative;
+    }
+    .ctrl-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 6px;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 0;
+      position: relative;
+    }
+    .ctrl-dot .ctrl-sym {
+      opacity: 0.92;
+      font-size: 8px;
+      font-weight: 900;
+      line-height: 1;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+    .ctrl-dot:hover .ctrl-sym {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+    .ctrl-settings {
+      background-color: #27C93F;
+      border: 1px solid rgba(30, 173, 53, 0.7);
+      color: rgba(0, 56, 11, 0.92);
+    }
+    .ctrl-min {
+      background-color: #FFBD2E;
+      border: 1px solid rgba(222, 161, 35, 0.7);
+      color: rgba(84, 53, 0, 0.92);
+    }
+    .ctrl-close {
+      background-color: #FF5F56;
+      border: 1px solid rgba(224, 68, 62, 0.7);
+      color: rgba(74, 0, 2, 0.92);
+    }
+    .ctrl-dot:hover {
+      transform: scale(1.15);
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    /* Sliders & Tracks */
+    .slider-block {
+      margin-bottom: 14px;
+    }
+    .slider-meta-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: #CBD5E1;
+      margin-bottom: 14px; /* 仅往下移动进度条，下方布局保持不变 */
+      font-weight: 500;
+    }
+    .chip-2x-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 11.5px;
+      color: #CBD5E1;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+    .chip-2x-btn.active {
+      background: rgba(245, 179, 56, 0.2);
+      border-color: var(--accent-gold);
+      color: var(--accent-gold);
+      box-shadow: 0 0 14px var(--accent-gold-glow);
+    }
+    .capsule-track {
+      height: 44px;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 22px;
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+      touch-action: none;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+    }
+    .capsule-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #E2E8F0 0%, #F8FAFC 60%, #FFFFFF 100%);
+      border-radius: 22px;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      box-shadow: 0 0 16px rgba(255, 255, 255, 0.45);
+      transition: width 0.04s linear;
+      z-index: 2;
+      pointer-events: none;
+      overflow: hidden; /* Apple Fluid Fill: Clip filled layer cleanly without blocking numbers */
+    }
+    /* Knob removed completely: Prevents opaque circle from obscuring percentage text */
+    .capsule-bar::after,
+    .warm-bar::after {
+      display: none !important;
+      content: none !important;
+    }
+    .capsule-bar.zero-width {
+      border-right: none !important;
+      box-shadow: none !important;
+      opacity: 0 !important;
+    }
+    .warm-bar {
+      background: linear-gradient(180deg, #FF9F0A 0%, #FF8500 50%, #E66800 100%) !important;
+      box-shadow: 0 0 18px rgba(255, 149, 0, 0.40) !important;
+      border-right: none !important;
+      overflow: hidden !important;
+    }
+    #warmthTrack {
+      border-color: rgba(255, 159, 10, 0.20) !important;
+      box-shadow: 0 0 0 1px rgba(255, 159, 10, 0.06) inset !important;
+    }
+    .capsule-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 16px;
+      pointer-events: none;
+      box-sizing: border-box;
+    }
+    .capsule-layer-base {
+      z-index: 1;
+    }
+    .capsule-layer-base .capsule-icon,
+    .capsule-layer-base span {
+      font-size: 15px;
+      color: #EBF0FA;
+    }
+    .capsule-layer-base .val-light {
+      font-variant-numeric: tabular-nums;
+      font-size: 13.5px;
+      color: #EBF0FA;
+      font-weight: 700;
+    }
+    .capsule-layer-clip {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 414px; /* Strict track width: 446px card - 32px padding */
+      height: 100%;
+      pointer-events: none;
+    }
+    .capsule-layer-fill {
+      z-index: 3;
+    }
+    .capsule-layer-fill .capsule-icon,
+    .capsule-layer-fill span {
+      font-size: 15px;
+      color: #1A1A1E;
+    }
+    .capsule-layer-fill .val-dark {
+      font-variant-numeric: tabular-nums;
+      font-size: 13.5px;
+      color: #1A1A1E;
+      font-weight: 800;
+    }
+    
+    .scale-guide-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: 11px;
+    }
+    .scale-guide-left, .scale-guide-right {
+      color: #94A3B8;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+    .scale-guide-mid {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #F5B338;
+      background: rgba(245, 179, 56, 0.10);
+      border: 1px solid rgba(245, 179, 56, 0.26);
+      border-radius: 6px;
+      padding: 1px 7px;
+      letter-spacing: 0.2px;
+      transition: all 0.2s ease;
+    }
+    body.theme-light .scale-guide-left, body.theme-light .scale-guide-right {
+      color: #64748B;
+    }
+    body.theme-light .scale-guide-mid {
+      color: #B45309;
+      background: rgba(245, 158, 11, 0.10);
+      border-color: rgba(245, 158, 11, 0.28);
+    }
+    body.theme-glass .scale-guide-left, body.theme-glass .scale-guide-right {
+      color: #BAE6FD;
+    }
+    body.theme-glass .scale-guide-mid {
+      color: #38BDF8;
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.32);
+      border-top-color: rgba(125, 211, 252, 0.60);
+    }
+
+    .scale-guide-text {
+      font-size: 11.5px;
+      color: #94A3B8;
+      margin-top: 5px;
+      font-weight: 500;
+    }
+
+    /* Scene Pills */
+    .presets-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin: 10px 0 14px;
+    }
+    .preset-pill {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 7px 4px;
+      text-align: center;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #CBD5E1;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .preset-pill:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+    }
+    .preset-pill.active {
+      background: rgba(245, 179, 56, 0.18);
+      border-color: var(--accent-gold);
+      color: var(--accent-gold);
+    }
+
+    /* Stealth Blackout Action Card */
+    .stealth-action-card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-top: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 13px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      margin-bottom: 0px;
+    }
+    .stealth-action-card:hover {
+      background: linear-gradient(135deg, rgba(255, 195, 80, 0.16) 0%, rgba(255, 160, 40, 0.05) 100%);
+      border: 1px solid rgba(255, 195, 80, 0.45);
+      border-top: 1px solid rgba(255, 215, 120, 0.65);
+      transform: translateY(-1px);
+    }
+    .stealth-action-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: #E6E6EC;
+      line-height: 18px;
+    }
+    .stealth-action-sub {
+      font-size: 11.5px;
+      color: #94A3B8;
+      line-height: 16px;
+    }
+    .workbench-card-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .keyboard-guide-bar {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: 11.5px;
+      color: #94A3B8;
+      text-align: center;
+    }
+    kbd {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 11px;
+      color: #fff;
+    }
+
+    /* 通知 Toast 的唯一实现在 luna.css（#webToast），此处不再保留卡内 Toast 样式 */
+
+    /* RIGHT: Real-time Optical & Win32 Telemetry Monitor (DeepSeek Harness style) */
+    .luna-telemetry-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: rgba(11, 14, 20, 0.85);
+      backdrop-filter: blur(36px) saturate(200%);
+      -webkit-backdrop-filter: blur(36px) saturate(200%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-top: 1px solid rgba(255, 255, 255, 0.30);
+      border-radius: var(--radius-card);
+      padding: 22px;
+      position: relative;
+      box-shadow: 0 28px 72px rgba(0, 0, 0, 0.55), 0 0 1px rgba(255, 255, 255, 0.15) inset, 0 0 45px rgba(56, 189, 248, 0.04);
+      transition: box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .telemetry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 16px;
+    }
+    .telemetry-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .telemetry-live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 10px var(--accent-emerald);
+      animation: pulseGreen 2s infinite;
+    }
+    @keyframes pulseGreen {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+    .telemetry-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #FFFFFF;
+      letter-spacing: -0.2px;
+    }
+    .telemetry-tag {
+      font-family: ui-monospace, SFMono-Regular, monospace;
+      font-size: 11.5px;
+      color: var(--text-tertiary);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    /* Telemetry Metrics Grid */
+    .telemetry-metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .metric-cell {
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 14px;
+      padding: 13px 15px;
+      transition: all 0.24s var(--ease-apple);
+    }
+    .metric-cell:hover {
+      border-color: rgba(56, 189, 248, 0.35);
+      background: rgba(255, 255, 255, 0.055);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38), 0 0 18px rgba(56, 189, 248, 0.08);
+      transform: translateY(-1.5px);
+    }
+    .metric-label {
+      font-size: 12px;
+      color: #94A3B8;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+    .metric-val {
+      font-size: 20px;
+      font-weight: 800;
+      color: #F8FAFC;
+      font-variant-numeric: tabular-nums;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+    }
+    .metric-unit {
+      font-size: 12px;
+      font-weight: 500;
+      color: #94A3B8;
+    }
+    .metric-sub {
+      font-size: 11px;
+      color: #64748B;
+      margin-top: 3px;
+    }
+
+    /* Live Pipeline Visualizer */
+    .pipeline-monitor-box {
+      background: rgba(7, 8, 12, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #CBD5E1;
+      margin-bottom: 16px;
+    }
+    .pipeline-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 0;
+      border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+    }
+    .pipeline-row:last-child {
+      border-bottom: none;
+    }
+    .pipe-status-active {
+      color: var(--accent-emerald);
+      font-weight: 700;
+    }
+    .pipe-status-idle {
+      color: #64748B;
+    }
+
+    /* Workbench Quick Actions (Click to simulate engine capabilities) */
+    .workbench-actions-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #94A3B8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+    .workbench-actions-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-action-pill {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #E2E8F0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-action-pill:hover {
+      background: rgba(255, 255, 255, 0.14);
+      border-color: rgba(255, 255, 255, 0.25);
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    /* ==========================================================================
+       TRANSITION RIBBON & BENTO SECTION (Tightened vertical distance)
+       ========================================================================== */
+    .section-ribbon-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin: 12px 0 28px;
+    }
+    .ribbon-line {
+      height: 1px;
+      flex: 1;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+    }
+    .ribbon-tag {
+      font-size: 12px;
+      font-weight: 600;
+      color: #94A3B8;
+      letter-spacing: 0.5px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      padding: 4px 14px;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .section-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #CBD5E1;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .section-badge .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-gold);
+      box-shadow: 0 0 8px var(--accent-gold);
+    }
+    .section-title {
+      font-size: clamp(26px, 3.4vw, 38px);
+      font-weight: 800;
+      letter-spacing: -0.8px;
+      margin-bottom: 8px;
+      background: linear-gradient(180deg, #FFFFFF 0%, #CBD5E1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .section-desc {
+      color: var(--text-secondary);
+      font-size: 15.5px;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* BENTO MATRIX */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-bottom: 48px;
+    }
+    .bento-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-card);
+      padding: 24px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .bento-card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(255, 255, 255, 0.22);
+      transform: translateY(-3px);
+      box-shadow: 0 20px 48px rgba(0, 0, 0, 0.55), 0 0 32px rgba(56, 189, 248, 0.08);
+    }
+    .bento-col-2 {
+      grid-column: span 2;
+    }
+    .bento-tag {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-gold);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 8px;
+    }
+    .bento-card h3 {
+      font-size: 19px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+    .bento-card p {
+      font-size: 14px;
+      color: #CBD5E1;
+      line-height: 1.65;
+      margin-bottom: 16px;
+    }
+
+    /* Interactive Dual Track Compare Box in Bento 1 */
+    .compare-bar-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 16px;
+    }
+    .compare-box {
+      font-size: 12.5px;
+    }
+    .compare-bad strong {
+      color: #F87171;
+    }
+    .compare-good strong {
+      color: var(--accent-gold);
+    }
+    .btn-bento-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      border-radius: 9999px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #F8FAFC;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      align-self: flex-start;
+    }
+    .btn-bento-action:hover {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: rgba(255, 255, 255, 0.28);
+      color: #FFFFFF;
+      transform: translateY(-1.5px);
+    }
+
+    /* Comparison Table Section (DeepSeek Harness style Matrix) */
+    .comparison-section {
+      margin-bottom: 48px;
+    }
+    .matrix-table-wrap {
+      background: rgba(14, 16, 22, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+    }
+    .matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13.5px;
+    }
+    .matrix-table th {
+      background: rgba(255, 255, 255, 0.04);
+      color: #94A3B8;
+      font-weight: 600;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .matrix-table td {
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #CBD5E1;
+    }
+    .matrix-table tr:last-child td {
+      border-bottom: none;
+    }
+    .matrix-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .matrix-highlight {
+      color: var(--accent-gold) !important;
+      font-weight: 700;
+    }
+
+    /* Hotkey Table Section */
+    .hotkey-container {
+      background: rgba(14, 16, 22, 0.7);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      margin-bottom: 48px;
+    }
+    .hotkey-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+    }
+    .hotkey-table th {
+      background: rgba(255, 255, 255, 0.04);
+      padding: 12px 18px;
+      color: #94A3B8;
+      font-weight: 600;
+      text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .hotkey-table td {
+      padding: 12px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #CBD5E1;
+    }
+    .kbd-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+      padding: 2px 7px;
+      font-size: 12px;
+      color: #fff;
+      font-weight: 600;
+      font-family: inherit;
+    }
+
+    /* FAQ Grid */
+    .faq-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 48px;
+    }
+    .faq-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-card);
+      padding: 20px;
+    }
+    .faq-item h4 {
+      font-size: 15px;
+      color: #fff;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+    .faq-item p {
+      font-size: 13.5px;
+      color: #94A3B8;
+      line-height: 1.6;
+    }
+
+    /* Fullscreen Stealth Simulator (Direct Pure Blackout with Smooth Bezier Wakeup) */
+    .stealth-fullscreen-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000000;
+      z-index: 99999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+    }
+    .stealth-fullscreen-layer.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 32px 0;
+      text-align: center;
+      color: var(--text-tertiary);
+      font-size: 13px;
+      background: rgba(7, 8, 11, 0.9);
+    }
+    footer a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      margin: 0 8px;
+    }
+    footer a:hover {
+      color: #fff;
+    }
+
+    /* Responsive */
+    @media (max-width: 980px) {
+      .luna-workbench {
+        grid-template-columns: 1fr;
+      }
+      .bento-grid {
+        grid-template-columns: 1fr;
+      }
+      .bento-col-2 {
+        grid-column: span 1;
+      }
+      .faq-grid {
+        grid-template-columns: 1fr;
+      }
+      .telemetry-metrics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  
+    /* ==========================================================================
+       APPLE-GRADE 1:1 WEB PREFERENCES MODAL (Sonoma Dark Glass)
+       ========================================================================== */
+    .web-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.68);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .web-modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .web-pref-card {
+      width: 680px;
+      max-width: 95vw;
+      height: 520px;
+      max-height: 90vh;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(28, 30, 38, 0.98) 0%, rgba(20, 22, 28, 0.99) 50%, rgba(14, 15, 20, 1.0) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-top: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 20px;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.06);
+      padding: 0;
+      transform: scale(0.94) translateY(12px);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: row;
+    }
+    .web-pref-sidebar {
+      width: 175px;
+      min-width: 175px;
+      background: rgba(0, 0, 0, 0.25);
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 18px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      box-sizing: border-box;
+    }
+    .web-sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .web-sidebar-brand span:first-child { font-size: 16px; }
+    .web-sidebar-title { font-size: 15px; font-weight: 700; color: #FFFFFF; }
+    .web-sidebar-ver {
+      font-size: 11px;
+      color: #94A3B8;
+      padding: 2px 8px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 9px;
+      margin: 4px 0 8px 0;
+      width: fit-content;
+    }
+    .web-sidebar-divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin-bottom: 6px;
+    }
+    .web-nav-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      color: #CBD5E1;
+      font-size: 12.5px;
+      font-weight: 500;
+      text-align: left;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .web-nav-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #FFFFFF;
+    }
+    .web-nav-btn.active {
+      background: rgba(245, 179, 56, 0.16);
+      border: 1px solid rgba(245, 179, 56, 0.45);
+      color: #F5B338;
+      font-weight: 600;
+    }
+    .web-pref-main {
+      flex: 1;
+      padding: 16px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      box-sizing: border-box;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+    }
+    .web-pref-content-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 8px;
+    }
+    .web-tab-header-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+    .web-tab-pane {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .web-tab-pane.active {
+      display: flex;
+    }
+    .web-modal-overlay.active .web-pref-card {
+      transform: scale(1) translateY(0);
+    }
+    .web-pref-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 12px;
+    }
+    .web-pref-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .web-pref-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #FFFFFF;
+      letter-spacing: 0.2px;
+    }
+    .web-pref-ver {
+      font-size: 11px;
+      color: #94A3B8;
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    .btn-web-update {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 10px;
+      padding: 2px 10px;
+      font-size: 11px;
+      color: #CBD5E1;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-web-update:hover {
+      background: rgba(245, 179, 56, 0.18);
+      border-color: rgba(245, 179, 56, 0.5);
+      color: #F5B338;
+    }
+    .web-close-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: #CBD5E1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .web-close-btn:hover {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: rgba(239, 68, 68, 0.6);
+      color: #EF4444;
+    }
+    .web-pref-group {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 12px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .web-pref-group-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .web-pref-group-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #CBD5E1;
+    }
+    .web-lang-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-web-lang {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 4px 12px;
+      color: #94A3B8;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-web-lang.active {
+      background: rgba(245, 179, 56, 0.22);
+      border-color: #F5B338;
+      color: #F5B338;
+      font-weight: 700;
+    }
+    .web-pref-checkbox-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .web-pref-checkbox-row input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      margin-top: 2px;
+      accent-color: #F5B338;
+      cursor: pointer;
+    }
+    .web-pref-cb-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .web-pref-cb-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #E2E8F0;
+    }
+    .web-pref-cb-sub {
+      font-size: 11.5px;
+      color: #94A3B8;
+    }
+    .web-hotkey-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2px 0;
+    }
+    .web-hotkey-act-label {
+      font-size: 12px;
+      color: #CBD5E1;
+    }
+    .web-keycap-pill {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-family: Consolas, monospace;
+      font-size: 11px;
+      font-weight: 700;
+      color: #E2E8F0;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .web-keycap-pill:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(245, 179, 56, 0.4);
+      color: #F5B338;
+    }
+    .web-keycap-pill.recording {
+      background: rgba(245, 179, 56, 0.22);
+      border-color: #F5B338;
+      color: #FFD166;
+      animation: pulseRecord 1.2s infinite;
+    }
+    .web-keycap-pill.emergency {
+      background: rgba(245, 179, 56, 0.15);
+      border-color: rgba(245, 179, 56, 0.6);
+      color: #FFD166;
+    }
+    @keyframes pulseRecord {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(245, 179, 56, 0.4); }
+      50% { box-shadow: 0 0 10px 2px rgba(245, 179, 56, 0.6); }
+    }
+    .web-btn-reset-hk {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 6px;
+      padding: 2px 8px;
+      color: #94A3B8;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .web-btn-reset-hk:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(245, 179, 56, 0.5);
+      color: #F5B338;
+    }
+    .web-pref-footer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 4px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .btn-web-pref-action {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 10px;
+      padding: 8px 18px;
+      color: #CBD5E1;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-web-pref-action:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #FFFFFF;
+    }
+    .btn-web-pref-save {
+      background: linear-gradient(180deg, #F9C04D 0%, #E89E28 100%);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 10px;
+      padding: 8px 22px;
+      color: #120A00;
+      font-size: 12.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-web-pref-save:hover {
+      background: linear-gradient(180deg, #FFC95C 0%, #EEA632 100%);
+    }
+
+    /* Live Gamma Canvas Box */
+    .gamma-canvas-box {
+      margin-top: 12px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .gamma-canvas-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      color: #94A3B8;
+      font-weight: 600;
+    }
+    .gamma-canvas-legend {
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+      font-family: Consolas, monospace;
+    }
+    #gammaCanvas {
+      width: 100%;
+      height: 85px;
+      border-radius: 6px;
+      background: rgba(10, 12, 16, 0.6);
+    }
+
+
+    /* =========================================================
+       Apple macOS System Settings Modal (Ventura / Sonoma Style)
+       ========================================================= */
+    .mac-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .mac-modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .mac-pref-card {
+      width: 740px;
+      max-width: 95vw;
+      height: 520px;
+      max-height: 90vh;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(26, 28, 36, 0.98) 0%, rgba(18, 20, 26, 0.98) 50%, rgba(13, 14, 18, 0.99) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-top: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 18px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06);
+      transform: scale(0.96) translateY(10px);
+      transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: row;
+    }
+    .mac-modal-overlay.active .mac-pref-card {
+      transform: scale(1) translateY(0);
+    }
+    #webSponsorModal .mac-pref-card::-webkit-scrollbar {
+      display: none;
+      width: 0px;
+      height: 0px;
+    }
+
+    /* 白夜雪山模式：macOS 偏好设置中心原生浅色毛玻璃与高对比度字色 */
+    .theme-light .mac-pref-card,
+    body.theme-light .mac-pref-card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 50%, rgba(241, 245, 249, 0.99) 100%);
+      border: 1px solid rgba(0, 0, 0, 0.10);
+      border-top: 1px solid rgba(255, 255, 255, 0.90);
+      box-shadow: 0 24px 64px rgba(15, 23, 42, 0.22), 0 0 0 1px rgba(0, 0, 0, 0.04);
+      color: #0F172A;
+    }
+    .theme-light .mac-pref-sidebar,
+    body.theme-light .mac-pref-sidebar {
+      background: rgba(241, 245, 249, 0.85);
+      border-right: 1px solid rgba(0, 0, 0, 0.08);
+    }
+    .theme-light .mac-sidebar-title,
+    body.theme-light .mac-sidebar-title {
+      color: #0F172A;
+    }
+    .theme-light .mac-sidebar-sep,
+    body.theme-light .mac-sidebar-sep {
+      background: rgba(0, 0, 0, 0.08);
+    }
+    .theme-light .mac-nav-item,
+    body.theme-light .mac-nav-item {
+      color: #334155;
+    }
+    .theme-light .mac-nav-item:hover,
+    body.theme-light .mac-nav-item:hover {
+      background: rgba(0, 0, 0, 0.05);
+      color: #0F172A;
+    }
+    .theme-light .mac-nav-item.active,
+    body.theme-light .mac-nav-item.active {
+      background: rgba(0, 0, 0, 0.08);
+      border-color: rgba(0, 0, 0, 0.12);
+      color: #0F172A;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .theme-light .mac-group-header,
+    body.theme-light .mac-group-header {
+      color: #0F172A;
+    }
+    .theme-light .mac-inset-group,
+    body.theme-light .mac-inset-group {
+      background: rgba(0, 0, 0, 0.035);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+    .theme-light .mac-setting-row,
+    body.theme-light .mac-setting-row {
+      border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
+    }
+    .theme-light .mac-setting-title,
+    body.theme-light .mac-setting-title {
+      color: #0F172A;
+    }
+    .theme-light .mac-setting-sub,
+    body.theme-light .mac-setting-sub {
+      color: #475569;
+    }
+    .theme-light .mac-seg-control,
+    body.theme-light .mac-seg-control {
+      background: rgba(0, 0, 0, 0.06);
+      border: 1px solid rgba(0, 0, 0, 0.10);
+    }
+    .theme-light .mac-seg-btn,
+    body.theme-light .mac-seg-btn {
+      color: #475569;
+    }
+    .theme-light .mac-seg-btn.active,
+    body.theme-light .mac-seg-btn.active {
+      background: #FFFFFF;
+      color: #0F172A;
+      border: 1px solid rgba(0, 0, 0, 0.10);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+    .theme-light .mac-keycap,
+    body.theme-light .mac-keycap {
+      background: #F1F5F9;
+      border: 1px solid #CBD5E1;
+      color: #0F172A;
+    }
+    .theme-light .mac-keycap-plus,
+    body.theme-light .mac-keycap-plus {
+      color: #94A3B8;
+    }
+    .theme-light .mac-save-tip,
+    body.theme-light .mac-save-tip {
+      color: #64748B;
+    }
+    .theme-light .mac-pref-btn-subtle,
+    body.theme-light .mac-pref-btn-subtle {
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      color: #1E293B;
+    }
+    .theme-light .mac-pref-btn-subtle:hover,
+    body.theme-light .mac-pref-btn-subtle:hover {
+      background: rgba(245, 179, 56, 0.18);
+      border-color: rgba(217, 119, 6, 0.50);
+      color: #B45309;
+    }
+
+    /* 苹果液态玻璃效果：Apple Liquid Glass / VisionOS Frosted Crystal Aesthetics
+       控制面板自身的玻璃质感统一由 luna.css 的 .luna-control-card.theme-liquid-glass 负责，
+       此处只保留弹窗相关规则，避免两套面板主题实现并存。 */
+    .theme-liquid-glass .mac-pref-card,
+    body.theme-liquid-glass .mac-pref-card {
+      background: linear-gradient(180deg, rgba(28, 40, 64, 0.92) 0%, rgba(18, 26, 44, 0.94) 50%, rgba(10, 15, 26, 0.95) 100%) !important;
+      border: 1px solid rgba(255, 255, 255, 0.18) !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.45) !important;
+      box-shadow: 0 28px 72px rgba(15, 23, 42, 0.8), 0 0 35px rgba(56, 189, 248, 0.12) !important;
+      backdrop-filter: blur(28px) saturate(180%) !important;
+    }
+    .theme-liquid-glass .mac-pref-sidebar,
+    body.theme-liquid-glass .mac-pref-sidebar {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border-right: 1px solid rgba(255, 255, 255, 0.12) !important;
+    }
+    .theme-liquid-glass .mac-inset-group,
+    body.theme-liquid-glass .mac-inset-group {
+      background: rgba(255, 255, 255, 0.065) !important;
+      border: 1px solid rgba(255, 255, 255, 0.16) !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.38) !important;
+    }
+    .theme-liquid-glass .mac-setting-sub,
+    body.theme-liquid-glass .mac-setting-sub {
+      color: #BAE6FD !important;
+    }
+    .theme-liquid-glass .mac-seg-btn.active,
+    body.theme-liquid-glass .mac-seg-btn.active {
+      background: rgba(255, 255, 255, 0.22) !important;
+      border: 1px solid rgba(255, 255, 255, 0.35) !important;
+      border-top: 1px solid rgba(255, 255, 255, 0.65) !important;
+      color: #FFFFFF !important;
+    }
+    .mac-pref-sidebar {
+      width: 195px;
+      min-width: 195px;
+      background: rgba(14, 15, 20, 0.65);
+      border-right: 1px solid rgba(255, 255, 255, 0.07);
+      padding: 16px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-sizing: border-box;
+      user-select: none;
+    }
+    .mac-traffic-lights {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+      cursor: pointer;
+    }
+    .mac-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: bold;
+      transition: all 0.15s ease;
+    }
+    .mac-dot-close { background: #FF5F56; border: 0.75px solid #E0443E; color: #4A0002; }
+    .mac-dot-min { background: #FFBD2E; border: 0.75px solid #DEA123; color: #543500; }
+    .mac-traffic-lights:hover .mac-dot-close { color: #000000; }
+    .mac-traffic-lights:hover .mac-dot-min { color: #000000; }
+    .mac-sidebar-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-top: 4px;
+      margin-bottom: 2px;
+      padding-left: 2px;
+    }
+    .mac-sidebar-sep {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.08);
+      margin: 0 0 4px 0;
+    }
+    .mac-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      height: 38px;
+      padding: 0 8px;
+      border-radius: 8px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: #CBD5E1;
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: left;
+      font-family: inherit;
+    }
+    .mac-nav-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      color: #F1F5F9;
+    }
+    .mac-nav-item.active {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+    .mac-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: #FFFFFF;
+      flex-shrink: 0;
+      border: 0.6px solid rgba(255, 255, 255, 0.25);
+    }
+    .mac-badge-blue { background: linear-gradient(180deg, #3B82F6 0%, #1D4ED8 100%); }
+    .mac-badge-amber { background: linear-gradient(180deg, #F59E0B 0%, #D97706 100%); }
+    .mac-badge-indigo { background: linear-gradient(180deg, #6366F1 0%, #4F46E5 100%); }
+    .mac-badge-emerald { background: linear-gradient(180deg, #10B981 0%, #059669 100%); }
+
+    .mac-pref-content {
+      flex: 1;
+      padding: 18px 22px 14px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      box-sizing: border-box;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+    }
+    .mac-pref-top-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+    .mac-header-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #FFFFFF;
+    }
+
+    /* macOS Inset Grouped Card */
+    .mac-inset-card {
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .mac-setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      min-height: 46px;
+      box-sizing: border-box;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .mac-setting-row:last-child {
+      border-bottom: none;
+    }
+    .mac-setting-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .mac-setting-title {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: #F8FAFC;
+    }
+    .mac-setting-sub {
+      font-size: 11px;
+      color: #94A3B8;
+    }
+
+    /* Apple Switch Control */
+    .mac-switch {
+      width: 38px;
+      height: 22px;
+      border-radius: 11px;
+      background: rgba(255, 255, 255, 0.16);
+      border: 0.8px solid rgba(255, 255, 255, 0.14);
+      position: relative;
+      cursor: pointer;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+      flex-shrink: 0;
+      user-select: none;
+    }
+    .mac-switch.active {
+      background: linear-gradient(135deg, #F5B338 0%, #E89E28 100%);
+      border-color: rgba(255, 255, 255, 0.35);
+    }
+    .mac-switch-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      position: absolute;
+      top: 1.2px;
+      left: 2px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+      transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .mac-switch.active .mac-switch-thumb {
+      transform: translateX(16px);
+    }
+
+    /* macOS Segmented Control */
+    .mac-segmented-control {
+      display: flex;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.32);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 9px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .mac-seg-btn {
+      height: 26px;
+      padding: 0 6px;
+      border-radius: 7px;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: #94A3B8;
+      background: transparent;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .mac-seg-btn.active {
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.20);
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+
+    /* Bottom action bar */
+    .mac-pref-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 4px;
+      padding: 0 4px;
+    }
+    .mac-auto-save-hint {
+      font-size: 11px;
+      color: #64748B;
+    }
+    .mac-btn-done {
+      background: rgba(245, 179, 56, 0.16);
+      border: 1px solid rgba(245, 179, 56, 0.45);
+      border-radius: 8px;
+      padding: 4px 20px;
+      color: #F5B338;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+    .mac-btn-done:hover {
+      background: rgba(245, 179, 56, 0.28);
+      border-color: #F5B338;
+      color: #FFFFFF;
+
+/* --------------------------------------------------------------------------
+   2. 💧 液态玻璃主题 (Liquid Glass Theme - VisionOS Frosted Crystal Glass)
+   -------------------------------------------------------------------------- */
+
+  body.theme-light .btn-mock-custom {
+    color: #B45309 !important;
+    background: rgba(245, 158, 11, 0.10) !important;
+    border: 1px solid rgba(217, 119, 6, 0.35) !important;
+  }
+  body.theme-light .btn-mock-custom:hover {
+    background: rgba(245, 158, 11, 0.18) !important;
+    border-color: rgba(217, 119, 6, 0.55) !important;
+    color: #92400E !important;
+  }
+
+  body.theme-liquid-glass .btn-mock-custom {
+    color: #38BDF8 !important;
+    background: rgba(56, 189, 248, 0.14) !important;
+    border: 1px solid rgba(56, 189, 248, 0.40) !important;
+  }
+  body.theme-liquid-glass .btn-mock-custom:hover {
+    background: rgba(56, 189, 248, 0.22) !important;
+    border-color: rgba(56, 189, 248, 0.60) !important;
+    color: #7DD3FC !important;
+  }
+

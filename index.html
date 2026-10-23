@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Luna Dimmer（月光屏幕调光器）—— 为午休关灯、深夜加班与暗室办公打造的 Windows 双轨调光：10%~100% 物理背光、1%~10% 穿透遮罩、全局热键与退出无痕还原。">
+  <meta name="theme-color" content="#05070d">
+  <title>Luna Dimmer · 月光屏幕调光器 — 把屏幕调成刚刚好的一点微光</title>
+  <link rel="icon" type="image/png" href="assets/icon.png">
+    <!-- External modular stylesheets for easy maintenance -->
+  <link rel="stylesheet" href="web/css/style.css">
+  <link rel="stylesheet" href="web/css/themes.css">
+  <link rel="stylesheet" href="web/css/modals.css">
+  <link rel="stylesheet" href="web/css/animations.css">
+  <!-- Landing rebuild: lunar shell + 1:1 native control deck (loaded last, authoritative) -->
+  <link rel="stylesheet" href="web/css/luna.css">
+</head>
+<body>
+
+  <!-- Ambient light source reacting to current brightness & warmth -->
+  <div class="room-ambient" id="ambientGlow"></div>
+
+  <!-- Fullscreen Optical Simulation Layers for Real-time Dimming & Night Shift Warmth -->
+  <div class="screen-dimmer-layer" id="screenDimmerLayer"></div>
+  <div class="screen-warmth-layer" id="screenWarmthLayer"></div>
+
+  <!-- Ambient dynamic starfield canvas behind the stage -->
+  <canvas id="heroCosmicCanvas" class="hero-cosmic-canvas"></canvas>
+
+  <main class="luna-main">
+
+    <!-- SECTION 1: THE LUNA CONTROL DECK (App-first landing: 1:1 native panel on the left) -->
+    <section id="workbench" class="luna-workbench">
+      <div class="luna-wordmark" aria-hidden="true">LUNA</div>
+      <div class="hero-intro">
+        <div class="brand-lockup">
+          <span class="brand-mark">☾ LUNA DIMMER</span>
+          <span class="brand-primary" id="brandTitle">月光屏幕调光器</span>
+        </div>
+        <h1 class="stage-main-title" id="stageMainTitle">把屏幕，调成刚刚好的一点微光</h1>
+      </div>
+
+      <div class="workbench-grid">
+        <div class="stage-caption stage-caption-panel"><span data-i18n="stageCapPanel">1:1 还原 Windows 原生面板 · 拖动滑块</span></div>
+        <div class="stage-caption stage-caption-telemetry"><span data-i18n="stageCapTelemetry">实时遥测同步跳动 · 10%~100% 物理背光 / 1%~10% 穿透遮罩</span></div>
+        <!-- LEFT: Control Center Mockup -->
+        <div class="workbench-card-wrapper">
+          <div class="panel-scaler">
+          <div class="luna-control-card" id="lunaControlCard" tabindex="0" aria-label="Luna Dimmer 原生控制面板">
+          <div class="card-top-rim"></div>
+
+          <!-- Header (1:1 Matching Desktop EXE Window Layout) -->
+          <div class="mockup-header">
+            <!-- Top Row: Celestial Orb + Title on Left, Window Controls on Right (1:1 with Desktop EXE) -->
+            <div class="mockup-header-top">
+              <div class="mockup-identity">
+                <div class="celestial-orb" id="orbPreview"></div>
+                <h4 id="luminaryTitle">月光屏幕调光器</h4>
+              </div>
+              <div class="window-controls" id="windowControlGroup">
+                <button class="ctrl-dot ctrl-settings" id="btnMockSettings" title="偏好设置与全局热键"><span class="ctrl-sym">⚙</span></button>
+                <button class="ctrl-dot ctrl-min" id="btnMockMin" title="最小化到系统托盘 (桌面端功能)"><span class="ctrl-sym">─</span></button>
+                <button class="ctrl-dot ctrl-close" id="btnMockClose" title="退出软件 (桌面端功能：100% 恢复系统初始屏幕亮度与色彩)"><span class="ctrl-sym">✕</span></button>
+              </div>
+            </div>
+
+            <!-- Sub Row: Status on Left (日间工作模式) strictly aligned with Theme & Reset on Right (深色 / 恢复原状) -->
+            <div class="mockup-header-sub">
+              <span id="luminaryStatus">☀️ 日间工作模式</span>
+              <div class="mockup-sub-actions">
+                <button class="btn-mock-reset" id="btnThemeTogglePill" onclick="toggleWebThemeQuick()" title="快捷切换深色、浅色与液态玻璃主题">🌙 深色</button>
+                <button class="btn-mock-reset" id="btnMockReset" onclick="resetToSystemDefault()" title="一键恢复屏幕亮度和色温为系统初始状态">↺ 恢复原状</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Brightness Capsule Slider with Apple-grade Dual Contrast Inversion -->
+          <div class="slider-block">
+            <div class="slider-meta-bar">
+              <span id="lblBrightMeta">屏幕亮度</span>
+              <div class="chip-2x-btn" id="boostChip" onclick="toggleBoost()">
+                <span>⚡ 深度压暗 ⚡</span>
+              </div>
+            </div>
+            <div class="capsule-track" id="sliderTrack">
+              <!-- Base Layer: Crisp Light White on Dark Track -->
+              <div class="capsule-layer capsule-layer-base">
+                <span class="capsule-icon" id="sliderIconBase">☀️</span>
+                <span class="capsule-val-text val-light" id="sliderValBase">100%</span>
+              </div>
+              <!-- Fill Layer: Inside liquid mercury bar, clipped to bar width with dark text -->
+              <div class="capsule-bar" id="sliderFill" style="width: 100%;">
+                <div class="capsule-layer-clip">
+                  <div class="capsule-layer capsule-layer-fill">
+                    <span class="capsule-icon" id="sliderIconFill">☀️</span>
+                    <span class="capsule-val-text val-dark" id="sliderValFill">100%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Warmth Capsule Slider with Symmetrical Dual Contrast Inversion -->
+          <div class="slider-block">
+            <div class="slider-meta-bar">
+              <span id="lblWarmthMeta">护眼色温</span>
+              <div class="chip-2x-btn" id="warmthChip" onclick="toggleWarmthMode()" title="点击一键开启/关闭 50% 舒缓防蓝光护眼模式">
+                <span>🌙 舒缓防蓝光</span>
+              </div>
+            </div>
+            <div class="capsule-track" id="warmthTrack">
+              <!-- Base Layer: Crisp Light White on Dark Track -->
+              <div class="capsule-layer capsule-layer-base">
+                <span class="capsule-icon candle-icon" id="warmthIconBase">🕯️</span>
+                <span class="capsule-val-text val-light" id="warmthValBase">0%</span>
+              </div>
+              <!-- Fill Layer: Inside golden-amber bar, clipped to bar width with dark text -->
+              <div class="capsule-bar warm-bar zero-width" id="warmthFill" style="width: 0%;">
+                <div class="capsule-layer-clip">
+                  <div class="capsule-layer capsule-layer-fill">
+                    <span class="capsule-icon candle-icon" id="warmthIconFill">🕯️</span>
+                    <span class="capsule-val-text val-dark" id="warmthValFill">0%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scene Presets: 2 Rows x 3 Pills Matching Desktop EXE -->
+          <div class="presets-header-row">
+            <span id="lblPresetsHeader">常用场景预设</span>
+            <button class="btn-mock-reset btn-mock-custom" id="btnPresetsCustomize" title="自定义情境名称、目标亮度、色温与深度压暗">⚙️ 自定义</button>
+          </div>
+          <div class="presets-row" style="margin-bottom: 8px;">
+            <div class="preset-pill" id="presetPill0" onclick="applyPreset(90, 0, this, 'work')" title="☀️ 白天办公 (90% 亮度 / 0% 色温)">☀️ 白天办公 90%</div>
+            <div class="preset-pill" id="presetPill1" onclick="applyPreset(30, 45, this, 'night')" title="🌙 夜间阅读 (30% 亮度 / 45% 色温)">🌙 夜间阅读 30%</div>
+            <div class="preset-pill" id="presetPill2" onclick="applyPreset(5, 75, this, 'sleep')" title="🛌 睡前极暗 (5% 亮度 / 70% 色温)">🛌 睡前极暗 5%</div>
+          </div>
+          <div class="presets-row">
+            <div class="preset-pill" id="presetPill3" onclick="applyPreset(65, 25, this, 'noon')" oncontextmenu="saveWebPreset('午间休息', 65, 25, this, event)" title="☕ 午间休息 (65% 亮度 / 25% 色温)&#10;左键单击：应用预设&#10;右键单击：保存当前为本预设">☕ 午间休息 65%</div>
+            <div class="preset-pill" id="presetPill4" onclick="applyPreset(50, 35, this, 'custom_1')" oncontextmenu="saveWebPreset('自定义1', 50, 35, this, event)" title="🎨 自定义1 (50% 亮度 / 35% 色温)&#10;左键单击：应用预设&#10;右键单击：保存当前为本预设">🎨 自定义1 50%</div>
+            <div class="preset-pill" id="presetPill5" onclick="applyPreset(20, 55, this, 'custom_2')" oncontextmenu="saveWebPreset('自定义2', 20, 55, this, event)" title="🌟 自定义2 (20% 亮度 / 55% 色温)&#10;左键单击：应用预设&#10;右键单击：保存当前为本预设">🌟 自定义2 20%</div>
+          </div>
+
+          <!-- Stealth Blackout Action Card: Centered with no arrow, 1:1 matching EXE -->
+          <div class="stealth-action-card" onclick="triggerStealthSim()">
+            <div class="stealth-action-title">🎧 一键黑屏挂机 (听歌/下载防刺眼)</div>
+            <div class="stealth-action-sub">(按任意键或晃动鼠标柔和点亮屏幕)</div>
+          </div>
+
+          <a class="panel-download-btn" id="btnHeroDownload" href="https://ghfast.top/https://github.com/Fugui-Dai/LunaDimmer/releases/download/v1.0.0/LunaDimmer_v1.0.0.exe" download="LunaDimmer_v1.0.0.exe" title="Windows 10 / 11 · 免安装 · 100% 本地运行">
+            <span class="dl-arrow" aria-hidden="true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3v12M7 10l5 5 5-5M5 21h14"/>
+              </svg>
+            </span>
+            <span class="dl-label" id="btnHeroDownloadLabel" data-i18n="heroDownloadCta">下载 Windows 免安装版 (v1.0.0)</span>
+          </a>
+
+          </div>
+          </div>
+
+        <!-- Interactive helper guide outside the card -->
+        <div class="keyboard-guide-bar" id="keyboardGuideBar">
+          支持键盘 <kbd>←</kbd> <kbd>→</kbd> 键 1% 精细微调 · <kbd>Shift</kbd>+<kbd>→</kbd> 5% 步进
+        </div>
+      </div>
+
+      <!-- RIGHT: Real-time Telemetry Monitor (Inspired by DeepSeek Harness Runtime Inspector) -->
+      <div class="luna-telemetry-panel has-spotlight">
+        <div>
+          <div class="telemetry-header">
+            <div class="telemetry-title-wrap">
+              <span class="telemetry-live-dot"></span>
+              <span class="telemetry-title" id="telemetryTitle">实时工程遥测控制台</span>
+            </div>
+            <span class="telemetry-tag">DDC/CI I2C + GDI Gamma</span>
+          </div>
+
+          <!-- Metrics Grid -->
+          <div class="telemetry-metrics-grid">
+            <div class="metric-cell has-spotlight">
+              <div class="metric-label">
+                <span id="metricPowerLabel">物理背光功耗</span>
+                <span id="metricHwBusStatus" style="color:var(--accent-emerald);">● I2C直通</span>
+              </div>
+              <div class="metric-val">
+                <span id="metricPowerVal">28.0</span>
+                <span class="metric-unit" id="metricPowerUnit">W (省电 ~0%)</span>
+              </div>
+              <div class="metric-sub" id="metricHwLevelSub">DDC/CI 硬件寄存器: 100%</div>
+            </div>
+
+            <div class="metric-cell has-spotlight">
+              <div class="metric-label">
+                <span id="metricLuxLabel">光通量削减比</span>
+                <span id="metricLuxBadge" style="color:var(--accent-gold);">● 护眼指数</span>
+              </div>
+              <div class="metric-val">
+                <span id="metricLuxVal">0.0</span>
+                <span class="metric-unit">%</span>
+              </div>
+              <div class="metric-sub" id="metricLuxSub">系统默认满光状态</div>
+            </div>
+
+            <div class="metric-cell has-spotlight">
+              <div class="metric-label">
+                <span id="metricOverlayLabel">Win32 深度遮罩层</span>
+                <span id="metricOverlayBadge">待机中 (0.00)</span>
+              </div>
+              <div class="metric-val">
+                <span id="metricOverlayVal">0.00</span>
+                <span class="metric-unit">Alpha</span>
+              </div>
+              <div class="metric-sub" id="metricOverlaySub">WS_EX_TRANSPARENT 零延迟穿透</div>
+            </div>
+
+            <div class="metric-cell has-spotlight">
+              <div class="metric-label">
+                <span id="metricTempLabel">色温曲率 / 蓝光削减</span>
+                <span id="metricTempBadge" style="color:#FFB84C;">● 烛光护眼</span>
+              </div>
+              <div class="metric-val">
+                <span id="metricTempKelvin">6500</span>
+                <span class="metric-unit">K</span>
+              </div>
+              <div class="metric-sub" id="metricBlueCutSub">蓝光波峰衰减: 0%</div>
+            </div>
+          </div>
+
+          <!-- Live Pipeline Terminal -->
+
+          <!-- Live 60FPS Gamma Ramp Monitor Canvas -->
+          <div class="gamma-canvas-box">
+            <div class="gamma-canvas-header">
+              <span id="gammaHeaderTitle">物理 Gamma 2.2 波形监视器</span>
+              <div class="gamma-canvas-legend">
+                <span style="color:#F87171;">R: <span id="legR">1.00</span></span>
+                <span style="color:#34D399;">G: <span id="legG">1.00</span></span>
+                <span style="color:#60A5FA;">B: <span id="legB">1.00</span></span>
+              </div>
+            </div>
+            <canvas id="gammaCanvas" width="880" height="330"></canvas>
+          </div>
+
+          <div class="pipeline-monitor-box">
+            <div class="pipeline-row">
+              <span id="pipe01Label">[PIPE-01] DDC/CI 硬件背光通信:</span>
+              <span class="pipe-status-active" id="pipeHwStatus">DIRECT_LINK_OK (100%)</span>
+            </div>
+            <div class="pipeline-row">
+              <span id="pipe02Label">[PIPE-02] Win32 零延迟鼠标穿透:</span>
+              <span class="pipe-status-active">PASS_THROUGH (WS_EX_LAYERED)</span>
+            </div>
+            <div class="pipeline-row">
+              <span id="pipe03Label">[PIPE-03] 16-bit Gamma 色温变换:</span>
+              <span class="pipe-status-active" id="pipeGammaStatus">CURVE_APPLIED (6500K)</span>
+            </div>
+            <div class="pipeline-row">
+              <span id="pipe04Label">[PIPE-04] 非破坏性生命周期恢复哨兵:</span>
+              <span class="pipe-status-active" id="pipeSentinelStatus">ARMED (100% 退出自动还原)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2: BENTO FEATURES MATRIX -->
+  <section id="features" class="luna-section">
+    <div class="section-header" data-reveal>
+      <h2 class="section-title" id="secFeaturesTitle">双轨无级协同 · 比显示器最低亮度再暗一点</h2>
+      <p class="section-desc" id="secFeaturesDesc">告别液晶漏光与干涩刺痛，专为午休关灯、深夜加班与暗室办公打磨的双轨护眼架构。</p>
+    </div>
+
+    <div class="bento-grid">
+      <!-- Bento 1: Dual Track (Large 2-column) -->
+      <div class="bento-card" data-reveal data-reveal-stagger="1">
+        <div>
+          <div class="bento-tag">Core Engine</div>
+          <h3 id="bento1Title">硬件背光 + 深度穿透遮罩双轨衔接</h3>
+          <p id="bento1Desc">
+            普通显示器物理调至 0% 依然有 30~50 nits 的刺眼漏光。Luna Dimmer 采用双轨无缝过渡技术：10%~100% 精确调控硬件功耗，滑至 10% 自动无缝接入 1%~10% 的微光遮罩，彻底杜绝刺眼强光。
+          </p>
+          <div class="compare-bar-wrap">
+            <div class="compare-box compare-bad">
+              <strong id="bento1BadTitle">传统软件 / 显示器 0%</strong>
+              <div id="bento1BadDesc" style="margin-top: 4px; color: #EF4444;">依然存在 35 nits 液晶漏光，深夜刺目</div>
+            </div>
+            <div class="compare-box compare-good">
+              <strong id="bento1GoodTitle">Luna Dimmer 双轨压暗</strong>
+              <div id="bento1GoodDesc" style="margin-top: 4px; color: var(--luna-amber-2);">降至 1~3 nits 微光，温润似墨玉</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bento 2: Living Luminary Orb -->
+      <div class="bento-card" data-reveal data-reveal-stagger="2">
+        <div>
+          <div class="bento-tag">Optics &amp; Astronomy</div>
+          <h3 id="bento2Title">拟态天体动态核心 Living Luminary</h3>
+          <p id="bento2Desc">
+            呼应宇宙天体运行规律。日间满光呈现金色日冕高光；晚间切换为银白静谧冷月；极暗助眠时自主进入 12 秒星光呼吸脉动，呼吸与心跳同频。
+          </p>
+        </div>
+      </div>
+
+      <!-- Bento 3: 100% Mouse Click-Through -->
+      <div class="bento-card" data-reveal data-reveal-stagger="3">
+        <div>
+          <div class="bento-tag">Win32 Architecture</div>
+          <h3 id="bento3Title">100% 鼠标穿透与无焦点抢占</h3>
+          <p id="bento3Desc">
+            基于 Win32 <code>WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_NOACTIVATE</code> 原生封装，遮罩层绝不阻挡游戏光标、拖拽操作与全屏打字，零输入延迟。
+          </p>
+        </div>
+      </div>
+
+      <!-- Bento 4: Clean Lifecycle & Reversibility -->
+      <div class="bento-card" data-reveal data-reveal-stagger="4">
+        <div>
+          <div class="bento-tag">Clean Architecture</div>
+          <h3 id="bento4Title">无痕生命周期与硬件恢复保障</h3>
+          <p id="bento4Desc">
+            遵循非破坏性原则。启动时自动在内存备份系统初始硬件背光与 Gamma 色温曲线，退出时 100% 毫秒级复原屏幕初始状态，绝不修改注册表，绝不污染系统显示设置。
+          </p>
+        </div>
+      </div>
+
+      <!-- Bento 5: Precision Stepping -->
+      <div class="bento-card" data-reveal data-reveal-stagger="5">
+        <div>
+          <div class="bento-tag">Precision Control</div>
+          <h3 id="bento5Title">键盘方向键 1% 精细微调</h3>
+          <p id="bento5Desc">
+            焦点无论在面板何处，敲击键盘 ← / → 键即时进行 1% 细腻步进调节；按住 Shift 5% 跳调，满足深夜对微光“多 1% 太亮、少 1% 太暗”的极致苛求。
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3: HOTKEY SECTION -->
+  <section id="hotkeys" class="luna-section">
+    <div class="section-header" data-reveal>
+      <h2 class="section-title" id="secHotkeysTitle">全局键盘盲操工作流</h2>
+      <p class="section-desc" id="secHotkeysDesc">无需唤出主界面，在全屏看剧、敲代码或躺在床上时随手调节。</p>
+    </div>
+
+    <div class="hotkey-container has-spotlight" data-reveal data-reveal-stagger="1">
+      <table class="hotkey-table">
+        <thead>
+          <tr>
+            <th id="thCombo">按键组合</th>
+            <th id="thAction">动作效果</th>
+            <th id="thIntent">设计意图</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="kbd-btn">Ctrl</span> + <span class="kbd-btn">Alt</span> + <span class="kbd-btn">Backspace</span></td>
+            <td id="hkRow1Act"><b>急救脱困：一键重置为系统默认 100% 状态</b></td>
+            <td id="hkRow1Intent">全黑迷航安全底线，闭着眼睛敲击瞬间还原物理屏幕</td>
+          </tr>
+          <tr>
+            <td><span class="kbd-btn">←</span> / <span class="kbd-btn">→</span> 或 <span class="kbd-btn">↑</span> / <span class="kbd-btn">↓</span></td>
+            <td id="hkRow2Act">精细 1% 步进调节亮度 (Shift 键 5%)</td>
+            <td id="hkRow2Intent">面板激活时无需鼠标对准滑块，敲击键盘方向键即可微调</td>
+          </tr>
+          <tr>
+            <td><span class="kbd-btn">Ctrl</span> + <span class="kbd-btn">Alt</span> + <span class="kbd-btn">↑</span> / <span class="kbd-btn">↓</span></td>
+            <td id="hkRow3Act">全局快速调节亮度 (步长 5%)</td>
+            <td id="hkRow3Intent">无论正在全屏游戏还是浏览网页，全局毫秒级微调</td>
+          </tr>
+          <tr>
+            <td><span class="kbd-btn">Ctrl</span> + <span class="kbd-btn">Alt</span> + <span class="kbd-btn">S</span></td>
+            <td id="hkRow4Act">一键切入助眠极暗 (5%)</td>
+            <td id="hkRow4Intent">睡前摸黑一按即生效，无需开灯找鼠标</td>
+          </tr>
+          <tr>
+            <td><span class="kbd-btn">Ctrl</span> + <span class="kbd-btn">Alt</span> + <span class="kbd-btn">B</span></td>
+            <td id="hkRow5Act">一键黑屏挂机 (听歌/下载防刺眼)</td>
+            <td id="hkRow5Intent">一秒进入 99.5% 纯黑遮罩听歌挂机，晃动鼠标苏醒</td>
+          </tr>
+          <tr>
+            <td><span class="kbd-btn">Ctrl</span> + <span class="kbd-btn">Alt</span> + <span class="kbd-btn">F</span></td>
+            <td id="hkRow6Act">暗夜微光聚光灯透视</td>
+            <td id="hkRow6Intent">暗夜或挂机模式下随鼠标开辟微光透镜光圈，看清局部文字</td>
+          </tr>
+          <tr>
+            <td><span class="kbd-btn">Ctrl</span> + <span class="kbd-btn">Alt</span> + <span class="kbd-btn">L</span></td>
+            <td id="hkRow7Act">呼出 / 隐藏控制面板</td>
+            <td id="hkRow7Intent">在屏幕正中或托盘吸附位置快速切换显示</td>
+          </tr>
+          <tr>
+            <td><span class="kbd-btn">Ctrl</span> + <span class="kbd-btn">Alt</span> + <span class="kbd-btn">P</span></td>
+            <td id="hkRow8Act">打开偏好设置中心</td>
+            <td id="hkRow8Intent">在任意桌面状态下一键呼出设置面板，支持按键捕获与冲突检测</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 4: FAQ SECTION -->
+  <section id="faq" class="luna-section">
+    <div class="section-header" data-reveal>
+      <h2 class="section-title" id="secFaqTitle">常见问答与技术答疑</h2>
+      <p class="section-desc" id="secFaqDesc">关于黑夜护眼调光、硬件功耗与系统安全的所有疑问，都在这里解答。</p>
+    </div>
+
+    <div class="faq-grid">
+      <div class="faq-item has-spotlight" data-reveal data-reveal-stagger="1">
+        <h4 id="faqQ1">Q: 为什么不直接调显示器硬件按键，而要用双轨调光？</h4>
+        <p id="faqA1">绝大多数液晶显示器即使把物理按键拉到 0%，实际发光仍有 30~50 nits，在漆黑卧室里依然刺目漏光。Luna Dimmer 既能调节物理背光降低功耗，又能在 10% 处自动无缝叠加深度深空遮罩，比硬件按键更暗更柔和，黑夜看屏温润如纸。</p>
+      </div>
+
+      <div class="faq-item has-spotlight" data-reveal data-reveal-stagger="2">
+        <h4 id="faqQ2">Q: 关闭或卸载后会对屏幕色彩有残留影响吗？</h4>
+        <p id="faqA2">绝不。Luna Dimmer 严格遵循“非破坏性生命周期”原则：启动时毫秒级备份系统原始物理背光与 Gamma 色温曲线，退出软件或点击“一键重置”时 100% 恢复初始硬件状态，零残留、零隐患。</p>
+      </div>
+
+      <div class="faq-item has-spotlight" data-reveal data-reveal-stagger="3">
+        <h4 id="faqQ3">Q: 极暗或挂机后如何随时唤醒脱困？</h4>
+        <p id="faqA3">随时敲击全局紧急快捷键 <b>Ctrl + Alt + Backspace</b>（或轻按 Esc 键）即可瞬间复原系统默认 100% 满光；挂机时晃动鼠标光标亦可 1.5 秒柔和苏醒，从容告别强光刺激。</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============================ 站点页脚 ============================ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-bottom">
+      <span data-i18n="footerCopyright">© 2026 月光屏幕调光器 (Luna Dimmer). 遵循 MIT 开源协议。</span>
+      <span class="footer-sep">·</span>
+      <span data-i18n="footerPrivacy">🛡️ 100% 本地运算 · 零遥测上传 · 零联网追踪</span>
+    </div>
+  </div>
+</footer>
+
+  <!-- ==========================================================================
+       WEB 1:1 INTERACTIVE PREFERENCES MODAL (APPLE DARK GLASS)
+       ========================================================================== -->
+  <!-- =========================================================
+       Apple macOS System Settings Modal (1:1 Native Desktop Parity)
+       ========================================================= -->
+  <div class="mac-modal-overlay" id="webPreferencesModal" onclick="handleModalOverlayClick(event)">
+    <div class="mac-pref-card" onclick="event.stopPropagation()">
+      <!-- Left Sidebar (195px) -->
+      <div class="mac-pref-sidebar">
+        <!-- 🔴 🟡 🟢 Traffic Lights -->
+        <div class="mac-traffic-lights" onclick="closeWebPreferences()" title="关闭设置 (Esc)">
+          <div class="mac-dot mac-dot-close">✕</div>
+          <div class="mac-dot mac-dot-min">─</div>
+        </div>
+
+        <div class="mac-sidebar-title" id="webSidebarTitle">偏好设置</div>
+        <div class="mac-sidebar-sep"></div>
+
+        <!-- 4 macOS Navigation Items with Colored Squircle Badges -->
+        <button class="mac-nav-item active" id="macNavBtn0" onclick="switchMacPrefTab(0)">
+          <div class="mac-badge mac-badge-blue">⚙️</div>
+          <span id="macNavTxt0">常规与启动</span>
+        </button>
+        <button class="mac-nav-item" id="macNavBtn1" onclick="switchMacPrefTab(1)">
+          <div class="mac-badge mac-badge-amber">👁️</div>
+          <span id="macNavTxt1">调光与护眼</span>
+        </button>
+        <button class="mac-nav-item" id="macNavBtn2" onclick="switchMacPrefTab(2)">
+          <div class="mac-badge mac-badge-indigo">⌨️</div>
+          <span id="macNavTxt2">全局快捷键</span>
+        </button>
+        <button class="mac-nav-item" id="macNavBtn3" onclick="switchMacPrefTab(3)">
+          <div class="mac-badge mac-badge-emerald">🛡️</div>
+          <span id="macNavTxt3">安全守护与重置</span>
+        </button>
+
+        <div style="flex: 1;"></div>
+
+        <div style="font-size: 10.5px; color: #64748B; padding-left: 4px;" id="webSidebarVer">V1.0.0</div>
+      </div>
+
+      <!-- Right Content Deck (macOS Inset Grouped) -->
+      <div class="mac-pref-content">
+        <div class="mac-pref-top-header">
+          <span class="mac-header-title" id="macHeaderTitle">常规与启动</span>
+        </div>
+
+        <!-- Pane 0: General -->
+        <div class="mac-tab-pane" id="macTabPane0" style="display: flex; flex-direction: column; gap: 12px;">
+          <!-- Card 0: Appearance Theme (黑天 / 白夜) -->
+          <div class="mac-inset-card">
+            <div class="mac-setting-row">
+              <div class="mac-setting-info">
+                <span class="mac-setting-title" id="macLblThemeTitle">外观主题</span>
+                <span class="mac-setting-sub" id="macLblThemeSub">在深色、浅色与液态玻璃之间即时无缝切换</span>
+              </div>
+              <div class="mac-segmented-control">
+                <button class="mac-seg-btn active" id="macThemeDarkBtn" onclick="setWebTheme('dark')">🌙 深色</button>
+                <button class="mac-seg-btn" id="macThemeLightBtn" onclick="setWebTheme('light')">☀️ 浅色</button>
+                <button class="mac-seg-btn" id="macThemeGlassBtn" onclick="setWebTheme('liquid_glass')">💧 液态玻璃</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 1: Language Segmented Control -->
+          <div class="mac-inset-card">
+            <div class="mac-setting-row">
+              <div class="mac-setting-info">
+                <span class="mac-setting-title" id="macLblLang">界面语言</span>
+                <span class="mac-setting-sub" id="macLblLangSub">动态即时重绘，无需重启客户端</span>
+              </div>
+              <div class="mac-segmented-control">
+                <button class="mac-seg-btn active" id="macLangZhBtn" onclick="setMacLanguage('zh')">🇨🇳 简体中文</button>
+                <button class="mac-seg-btn" id="macLangEnBtn" onclick="setMacLanguage('en')">🇺🇸 English</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: System & Behavior Apple Switches -->
+          <div class="mac-inset-card">
+            <div class="mac-setting-row">
+              <div class="mac-setting-info">
+                <span class="mac-setting-title" id="macLblAutostart">开机时自动后台静默启动</span>
+                <span class="mac-setting-sub" id="macLblAutostartSub">Windows 登录后自动最小化常驻托盘，不弹窗打扰</span>
+              </div>
+              <div class="mac-switch" id="macSwAutostart" onclick="toggleMacSwitch(this, 'autostart')">
+                <div class="mac-switch-thumb"></div>
+              </div>
+            </div>
+            <div class="mac-setting-row">
+              <div class="mac-setting-info">
+                <span class="mac-setting-title" id="macLblRememberPos">记忆主控制面板上次拖拽停靠位置</span>
+                <span class="mac-setting-sub" id="macLblRememberPosSub">关闭此项后每次自动吸附在右下角任务栏托盘正上方</span>
+              </div>
+              <div class="mac-switch active" id="macSwRememberPos" onclick="toggleMacSwitch(this, 'remember_pos')">
+                <div class="mac-switch-thumb"></div>
+              </div>
+            </div>
+            <div class="mac-setting-row">
+              <div class="mac-setting-info">
+                <span class="mac-setting-title" id="macLblAutoUpdate">启动时自动检查新版本</span>
+                <span class="mac-setting-sub" id="macLblAutoUpdateSub">启动时在后台静默检测是否有更稳定或高性能版本</span>
+              </div>
+              <div class="mac-switch active" id="macSwAutoUpdate" onclick="toggleMacSwitch(this, 'auto_update')">
+                <div class="mac-switch-thumb"></div>
+              </div>
+            </div>
+            <div class="mac-setting-row">
+              <div class="mac-setting-info">
+                <span class="mac-setting-title" id="macLblFullscreenGuard">全屏游戏与演示时禁止快捷键弹窗抢焦点</span>
+                <span class="mac-setting-sub" id="macLblFullscreenGuardSub">处于全屏独占应用时快捷键仅在后台平滑调光，不打断游戏与视频</span>
+              </div>
+              <div class="mac-switch active" id="macSwFullscreenGuard" onclick="toggleMacSwitch(this, 'fullscreen_guard')">
+                <div class="mac-switch-thumb"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Cloud Version Check & Official Website -->
+          <div class="mac-inset-card">
+            <div class="mac-setting-row">
+              <div class="mac-setting-info">
+                <span class="mac-setting-title" id="macLblCloudVer">当前版本: V1.0.0</span>
+              </div>
+              <button class="btn-web-update" id="btnMacCheckUpdate" onclick="handleMacCheckUpdate()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 8px; padding: 4px 14px; font-size: 11.5px; color: #F1F5F9; cursor: pointer;">🔄 检查新版本</button>
+            </div>
+            <div class="mac-setting-row">
+              <div class="mac-setting-info">
+                <span class="mac-setting-title" id="macLblOfficialSite">官方网站</span>
+                <span class="mac-setting-sub">https://lunadimmer.pages.dev/</span>
+              </div>
+              <a href="https://lunadimmer.pages.dev/" target="_blank" rel="noopener noreferrer" class="btn-web-update" id="btnMacVisitSite" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 8px; padding: 4px 14px; font-size: 11.5px; color: #F1F5F9; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;">🌐 访问官网</a>
+            </div>
+            <div class="mac-setting-row">
+              <div class="mac-setting-info">
+                <span class="mac-setting-title" id="macLblContactQQ">联系作者 / QQ</span>
+                <span class="mac-setting-sub">1115406747@qq.com</span>
+              </div>
+              <button class="btn-web-update" id="btnMacCopyQQ" onclick="handleCopyQQ(this)" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 8px; padding: 4px 14px; font-size: 11.5px; color: #F1F5F9; cursor: pointer;">📋 复制</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pane 1: Optics -->
+        <div class="mac-tab-pane" id="macTabPane1" style="display: none; flex-direction: column; gap: 12px;">
+          <div class="mac-inset-card">
+            <div class="mac-setting-row">
+              <div class="mac-setting-info">
+                <span class="mac-setting-title" id="macLblHwChannel">当前显示器调光方式：</span>
+                <span class="mac-setting-sub" id="macLblHwChannelSub">通过 DDC/CI I2C 物理通道直接调控显示器背光</span>
+              </div>
+              <span style="font-size: 11.5px; font-weight: 600; color: #34D399; background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.35); border-radius: 6px; padding: 3px 10px;" id="macLblHwReady">🟢 硬件物理背光调节 (支持 DDC/CI 物理硬件通信)</span>
+            </div>
+          </div>
+
+          <div class="mac-inset-card">
+            <div class="mac-setting-row">
+              <div class="mac-setting-info">
+                <span class="mac-setting-title" id="macLblSmoothWake">黑屏唤醒时启用 1.5 秒平滑渐亮 (防强光刺眼)</span>
+                <span class="mac-setting-sub" id="macLblSmoothWakeSub">夜间唤醒屏幕时以柔和曲线逐渐变亮，避免瞬间强光刺激眼睛</span>
+              </div>
+              <div class="mac-switch active" id="macSwSmoothWake" onclick="toggleMacSwitch(this, 'smooth_wake')">
+                <div class="mac-switch-thumb"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pane 2: Hotkeys -->
+        <div class="mac-tab-pane" id="macTabPane2" style="display: none; flex-direction: column; gap: 8px;">
+          <div class="mac-inset-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 14px 8px 14px; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
+              <span style="font-size: 13px; font-weight: 700; color: #FFFFFF;" id="macLblHkGroup">全局快捷键设置 (点击键帽录制新按键)</span>
+              <button onclick="resetMacHotkeys()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 7px; padding: 3px 10px; color: #CBD5E1; font-size: 11px; font-weight: 600; cursor: pointer;" id="macBtnResetHk">↺ 恢复默认快捷键</button>
+            </div>
+
+            <div class="mac-setting-row" style="min-height: 38px; padding: 4px 14px;">
+              <span class="mac-setting-title" id="macHkUp">☀️ 快速调亮 (+5%)</span>
+              <button class="web-keycap-pill" id="macBtnHkUp" onclick="recordMacHotkey('brightness_up')">Ctrl+Alt+Up</button>
+            </div>
+            <div class="mac-setting-row" style="min-height: 38px; padding: 4px 14px;">
+              <span class="mac-setting-title" id="macHkDown">🌙 快速调暗 (-5%)</span>
+              <button class="web-keycap-pill" id="macBtnHkDown" onclick="recordMacHotkey('brightness_down')">Ctrl+Alt+Down</button>
+            </div>
+            <div class="mac-setting-row" style="min-height: 38px; padding: 4px 14px;">
+              <span class="mac-setting-title" id="macHkSleep">🛌 切换睡前极暗模式 (5%)</span>
+              <button class="web-keycap-pill" id="macBtnHkSleep" onclick="recordMacHotkey('toggle_sleep')">Ctrl+Alt+S</button>
+            </div>
+            <div class="mac-setting-row" style="min-height: 38px; padding: 4px 14px;">
+              <span class="mac-setting-title" id="macHkStealth">🎧 切换黑屏挂机模式</span>
+              <button class="web-keycap-pill" id="macBtnHkStealth" onclick="recordMacHotkey('toggle_stealth')">Ctrl+Alt+B</button>
+            </div>
+            <div class="mac-setting-row" style="min-height: 38px; padding: 4px 14px;">
+              <span class="mac-setting-title" id="macHkSpotlight">🔦 切换微光聚光灯透视</span>
+              <button class="web-keycap-pill" id="macBtnHkSpotlight" onclick="recordMacHotkey('toggle_spotlight')">Ctrl+Alt+F</button>
+            </div>
+            <div class="mac-setting-row" style="min-height: 38px; padding: 4px 14px;">
+              <span class="mac-setting-title" id="macHkPanel">🎛️ 显示 / 隐藏控制面板</span>
+              <button class="web-keycap-pill" id="macBtnHkPanel" onclick="recordMacHotkey('toggle_panel')">Ctrl+Alt+L</button>
+            </div>
+            <div class="mac-setting-row" style="min-height: 38px; padding: 4px 14px;">
+              <span class="mac-setting-title" id="macHkSettings">⚙️ 打开软件设置面板</span>
+              <button class="web-keycap-pill" id="macBtnHkSettings" onclick="recordMacHotkey('open_settings')">Ctrl+Alt+P</button>
+            </div>
+            <div class="mac-setting-row" style="min-height: 38px; padding: 4px 14px;">
+              <span class="mac-setting-title" id="macHkEmergency" style="color: #F87171;">🚨 紧急恢复满亮 (防误触黑屏)</span>
+              <button class="web-keycap-pill" id="macBtnHkEmergency" onclick="recordMacHotkey('panic_restore')" style="border-color: #D97706; color: #FCD34D;">Ctrl+Alt+Backspace</button>
+            </div>
+          </div>
+          <div id="macHotkeyStatus" style="font-size: 11px; min-height: 16px; color: #34D399; padding-left: 6px;"></div>
+        </div>
+
+        <!-- Pane 3: Safety & Reset -->
+        <div class="mac-tab-pane" id="macTabPane3" style="display: none; flex-direction: column; gap: 12px;">
+          <div class="mac-inset-card">
+            <div style="padding: 16px 14px; display: flex; flex-direction: column; gap: 6px;">
+              <span style="font-size: 13px; font-weight: 700; color: #FFFFFF;" id="macLblSafetyTitle">纯净无痕运行保障声明</span>
+              <p style="font-size: 11.5px; color: #94A3B8; line-height: 19px; margin: 0;" id="macLblSafety">安全不破坏系统：软件退出或崩溃时，100% 自动还原屏幕原本物理亮度和色温，绝不修改注册表。独立守护哨兵进程监听主 PID，毫秒级无痕自愈。</p>
+            </div>
+          </div>
+
+          
+          <div class="mac-inset-card">
+            <div class="mac-setting-row">
+              <div class="mac-setting-info">
+                <span class="mac-setting-title" id="macLblFbTitle">问题与体验反馈</span>
+                <span class="mac-setting-sub" id="macLblFbSub">遇到异常缺陷或有改进建议？欢迎随时向工程师团队反馈</span>
+              </div>
+              <button onclick="openWebFeedbackModal()" style="background: rgba(245, 179, 56, 0.16); border: 1px solid rgba(245, 179, 56, 0.45); border-radius: 8px; padding: 4px 16px; color: #F5B338; font-size: 11.5px; font-weight: 600; cursor: pointer;" id="macBtnOpenFb">提交使用反馈</button>
+            </div>
+          </div>
+
+          <div class="mac-inset-card">
+            <div class="mac-setting-row">
+              <div class="mac-setting-info">
+                <span class="mac-setting-title" id="macLblSponsorTitle">开发者赞赏与心意</span>
+                <span class="mac-setting-sub" id="macLblSponsorSub">一份来自开发团队写在深夜里的真诚心声</span>
+              </div>
+              <button onclick="openWebSponsorModal()" style="background: rgba(245, 179, 56, 0.16); border: 1px solid rgba(245, 179, 56, 0.45); border-radius: 8px; padding: 4px 16px; color: #F5B338; font-size: 11.5px; font-weight: 600; cursor: pointer;" id="macBtnOpenSponsor">☕ 打赏支持</button>
+            </div>
+          </div>
+
+
+          <div class="mac-inset-card">
+            <div class="mac-setting-row">
+              <div class="mac-setting-info">
+                <span class="mac-setting-title" style="color: #F87171;" id="macLblResetTitle">恢复软件出厂默认设置</span>
+                <span class="mac-setting-sub" id="macLblResetSub">将所有光感、偏好、开机项与全局快捷键重置为出厂预设</span>
+              </div>
+              <button onclick="resetMacPreferencesAll()" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.38); border-radius: 8px; padding: 4px 16px; color: #F87171; font-size: 11.5px; font-weight: 600; cursor: pointer;" id="macBtnResetAll">恢复出厂设置</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Actions -->
+        <div class="mac-pref-footer">
+          <span class="mac-auto-save-hint" id="macLblAutoSave">✓ 偏好设置即时生效并自动保存</span>
+          <button class="mac-btn-done" onclick="closeWebPreferences()" id="macBtnDone">完成</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- =========================================================
+       Apple macOS Style Web Feedback Modal (Anti-Abuse Protected)
+       ========================================================= -->
+  <div class="mac-modal-overlay" id="webFeedbackModal" onclick="if(event.target===this)closeWebFeedbackModal()">
+    <div class="mac-pref-card" style="width: 520px; height: auto; min-height: 480px; flex-direction: column; padding: 20px;" onclick="event.stopPropagation()">
+      <!-- Top Bar -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="mac-traffic-lights" onclick="closeWebFeedbackModal()" title="关闭 (Esc)">
+            <div class="mac-dot mac-dot-close">✕</div>
+            <div class="mac-dot mac-dot-min">─</div>
+            </div>
+          <span style="font-size: 15px; font-weight: 700; color: #FFFFFF;" id="webFbModalTitle">💬 问题与体验反馈 (V1.0.0)</span>
+        </div>
+        <button onclick="closeWebFeedbackModal()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; color: #94A3B8; width: 22px; height: 22px; cursor: pointer; font-size: 11px; font-weight: bold;">✕</button>
+      </div>
+
+      <!-- Form Content -->
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <!-- Category -->
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 12px; font-weight: 600; color: #CBD5E1;" id="webFbLblCategory">反馈分类：</span>
+          <select id="webFbType" style="flex: 1; height: 30px; background: #1E222D; border: 1px solid #3B4252; border-radius: 7px; padding: 0 10px; color: #FFFFFF; font-size: 12px; font-family: inherit;">
+            <option id="webFbOptBug">🐛 遇到异常缺陷 (Bug Report)</option>
+            <option id="webFbOptReq">💡 体验与功能建议 (Feature Request)</option>
+            <option id="webFbOptHw">🖥️ 显示器硬件兼容问题 (Hardware)</option>
+          </select>
+        </div>
+
+        <!-- Description -->
+        <textarea id="webFbDesc" placeholder="请详细描述发生场景、屏幕型号或改进建议 (10~500 字)..." style="width: 100%; height: 120px; background: #1A1D26; border: 1px solid #333947; border-radius: 8px; padding: 10px; color: #F8FAFC; font-size: 12px; font-family: inherit; line-height: 18px; resize: none; box-sizing: border-box;"></textarea>
+
+        <!-- Contact (Optional) -->
+        <input type="text" id="webFbContact" placeholder="联系方式 (可选，邮箱/微信，便于向您答复进展)" style="width: 100%; height: 32px; background: #1A1D26; border: 1px solid #333947; border-radius: 7px; padding: 0 10px; color: #F8FAFC; font-size: 12px; font-family: inherit; box-sizing: border-box;" />
+
+        <!-- Honeypot Bait (Hidden from humans, bots trap) -->
+        <input type="text" id="webFbHoneypot" style="display: none !important;" tabindex="-1" autocomplete="off" />
+
+        <!-- Math Challenge & Snapshot -->
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 4px 0;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 12px; font-weight: 600; color: #F5B338;" id="webFbMathLabel">🛡️ 人机验证：</span>
+            <input type="text" id="webFbMathAns" placeholder="答案" style="width: 50px; height: 26px; text-align: center; background: #1A1D26; border: 1px solid #333947; border-radius: 6px; color: #FFFFFF; font-weight: bold; font-size: 12px;" />
+          </div>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #94A3B8; cursor: pointer;">
+            <input type="checkbox" id="webFbDiagCheck" checked style="accent-color: #F5B338;" />
+            <span id="webFbSnapshotLabel">附加只读环境快照 (无敏感隐私)</span>
+          </label>
+        </div>
+
+        <!-- Status msg -->
+        <div id="webFbStatus" style="font-size: 11.5px; font-weight: 600; min-height: 18px;"></div>
+
+        <!-- Buttons -->
+        <div style="display: flex; align-items: center; justify-content: flex-end; margin-top: 4px;">
+          <button id="webBtnSubmitFb" onclick="submitWebFeedback()" style="background: rgba(245, 179, 56, 0.18); border: 1px solid rgba(245, 179, 56, 0.50); border-radius: 8px; padding: 6px 22px; color: #F5B338; font-size: 12.5px; font-weight: 700; cursor: pointer;">🚀 安全提交反馈</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- =========================================================
+       Apple macOS Style Web Sponsor Modal (Late-Night Care)
+       ========================================================= -->
+  <div class="mac-modal-overlay" id="webSponsorModal" onclick="if(event.target===this)closeWebSponsorModal()">
+    <div class="mac-pref-card" style="width: 460px; height: auto; max-height: 90vh; flex-direction: column; padding: 18px 20px; overflow-y: hidden;" onclick="event.stopPropagation()">
+      <!-- Top Bar: Left spacer + Center Title + Right Close -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+        <div style="width: 24px;"></div>
+        <span style="font-size: 15px; font-weight: 700; color: #FFFFFF; text-align: center; flex: 1;" id="webSponsorTitle">🌙 陌生人的一纸深夜心声</span>
+        <div class="mac-traffic-lights" style="gap: 8px; margin: 0;">
+          <div class="mac-dot mac-dot-close" onclick="closeWebSponsorModal()" title="关闭 (Esc)">✕</div>
+        </div>
+      </div>
+
+      <!-- Letter Body: Concise Warm Card -->
+      <div style="background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(255, 255, 255, 0.08); border-left: 3px solid #818CF8; border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; user-select: text; -webkit-user-select: text; cursor: text;" id="webSponsorBody">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Footer Buttons: Clean 2 buttons -->
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+        <button id="webBtnCopyWarmth" onclick="copyWebSponsorWarmth(this)" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 8px; padding: 6px 14px; color: #CBD5E1; font-size: 12px; font-weight: 600; cursor: pointer;">📋 复制这份温暖</button>
+        <button id="webBtnSponsorMain" onclick="closeWebSponsorModal()" style="background: #0A84FF; border: none; border-radius: 8px; padding: 7px 18px; color: #FFFFFF; font-size: 12.5px; font-weight: 600; cursor: pointer;">💛 收到，这就去休息</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       Apple macOS Style Web Preset Customizer Modal
+       ========================================================= -->
+  <div class="mac-modal-overlay" id="webPresetCustomizerModal" onclick="if(event.target===this)closeWebPresetCustomizer()">
+    <div class="mac-pref-card" style="width: 500px; height: auto; max-height: 90vh; flex-direction: column; padding: 20px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none;" onclick="event.stopPropagation()">
+      <!-- Top Bar: Title + Traffic Lights -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+        <span style="font-size: 14.5px; font-weight: 700; color: #FFFFFF;" id="webPresetModalTitle">🎨 自定义常用场景预设</span>
+        <div class="mac-traffic-lights" style="gap: 8px; margin: 0;">
+          <div class="mac-dot mac-dot-close" onclick="closeWebPresetCustomizer()" title="关闭 (Esc)">✕</div>
+        </div>
+      </div>
+
+      <!-- Segmented Control for 6 presets -->
+      <div class="mac-segmented-control" style="margin-bottom: 14px; width: 100%; display: grid; grid-template-columns: repeat(6, 1fr);" id="webPresetTabs">
+        <button class="mac-seg-btn active" id="webPresetTabWork" onclick="switchWebPresetEdit('work', this)">☀️ 白天</button>
+        <button class="mac-seg-btn" id="webPresetTabNight" onclick="switchWebPresetEdit('night', this)">🌙 夜间</button>
+        <button class="mac-seg-btn" id="webPresetTabSleep" onclick="switchWebPresetEdit('sleep', this)">🛌 睡前</button>
+        <button class="mac-seg-btn" id="webPresetTabNoon" onclick="switchWebPresetEdit('noon', this)">☕ 午间</button>
+        <button class="mac-seg-btn" id="webPresetTabCustom1" onclick="switchWebPresetEdit('custom_1', this)">🎨 自定1</button>
+        <button class="mac-seg-btn" id="webPresetTabCustom2" onclick="switchWebPresetEdit('custom_2', this)">🌟 自定2</button>
+      </div>
+
+      <!-- Inset Card for Settings -->
+      <div class="mac-inset-card" style="margin-bottom: 12px;">
+        <div class="mac-setting-row">
+          <div class="mac-setting-info">
+            <span class="mac-setting-title" id="webPresetLblName">预设显示名称</span>
+            <span class="mac-setting-sub" id="webPresetLblNameSub">在主控制面板和快捷菜单中显示的标题</span>
+          </div>
+          <input type="text" id="webPresetNameInput" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14); border-radius: 6px; padding: 4px 8px; color: #fff; font-size: 12px; width: 140px; outline: none;" oninput="onWebPresetNameInput(this.value)">
+        </div>
+
+        <div class="mac-setting-row">
+          <div class="mac-setting-info">
+            <span class="mac-setting-title" id="webPresetLblBright">目标屏幕亮度</span>
+            <span class="mac-setting-sub" id="webPresetLblBrightSub">切换到此情境时的显示器物理背光与微光</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="range" id="webPresetBrightSlider" min="1" max="100" value="90" style="width: 110px; cursor: pointer;" oninput="onWebPresetBrightInput(this.value)">
+            <span id="webPresetBrightVal" style="font-size: 12.5px; font-weight: 700; color: #F5B338; width: 38px; text-align: right;">90%</span>
+          </div>
+        </div>
+
+        <div class="mac-setting-row">
+          <div class="mac-setting-info">
+            <span class="mac-setting-title" id="webPresetLblWarmth">防蓝光护眼色温</span>
+            <span class="mac-setting-sub" id="webPresetLblWarmthSub">暖色琥珀色调深度过滤高能短波蓝光</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="range" id="webPresetWarmthSlider" min="0" max="100" value="0" style="width: 110px; cursor: pointer;" oninput="onWebPresetWarmthInput(this.value)">
+            <span id="webPresetWarmthVal" style="font-size: 12.5px; font-weight: 700; color: #FCD34D; width: 38px; text-align: right;">0%</span>
+          </div>
+        </div>
+
+        <div class="mac-setting-row">
+          <div class="mac-setting-info">
+            <span class="mac-setting-title" id="webPresetLblBoost">2x 深度压暗滤镜</span>
+            <span class="mac-setting-sub" id="webPresetLblBoostSub">突破硬件最低物理背光，实现暗夜微透镜</span>
+          </div>
+          <input type="checkbox" id="webPresetBoostSwitch" style="cursor: pointer; transform: scale(1.2);" onchange="onWebPresetBoostChange(this.checked)">
+        </div>
+      </div>
+
+      <!-- Quick Helpers -->
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+        <button id="webPresetBtnCapture" onclick="captureCurrentScreenToPreset()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 4px 10px; color: #CBD5E1; font-size: 11px; cursor: pointer;">📍 抓取当前屏幕参数</button>
+        <button id="webPresetBtnPreview" onclick="previewWebPresetLive()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 4px 10px; color: #CBD5E1; font-size: 11px; cursor: pointer;">👁️ 实时预览效果</button>
+        <div style="flex: 1;"></div>
+        <button id="webPresetBtnReset" onclick="resetWebPresetToDefault()" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.10); border-radius: 6px; padding: 4px 10px; color: #94A3B8; font-size: 11px; cursor: pointer;">↺ 恢复出厂默认</button>
+      </div>
+
+      <!-- Status Tip & Footer Actions -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+        <span id="webPresetCustomizerTip" style="font-size: 11px; color: #64748B;">✓ 修改将自动同步到主控制面板</span>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button id="webPresetBtnCancel" onclick="closeWebPresetCustomizer()" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; padding: 5px 14px; color: #94A3B8; font-size: 11.5px; cursor: pointer;">取消</button>
+          <button id="webPresetBtnSave" onclick="saveWebPresetCustomizer()" style="background: rgba(245, 179, 56, 0.18); border: 1px solid rgba(245, 179, 56, 0.45); border-radius: 8px; padding: 5px 18px; color: #F5B338; font-size: 12px; font-weight: 600; cursor: pointer;">💾 保存并应用</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- =========================================================
+       Apple macOS Style Web Reset Confirmation Modal (Dangerous Action Warning)
+       ========================================================= -->
+  <div class="mac-modal-overlay" id="webResetConfirmModal" onclick="if(event.target===this)closeWebResetConfirmModal()">
+    <div class="mac-pref-card" style="width: 420px; height: auto; min-height: 0; flex-direction: column; padding: 22px 24px; border-radius: 14px;" onclick="event.stopPropagation()">
+      <!-- Header: ⚠️ Icon Badge + Title -->
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+        <div style="width: 38px; height: 38px; border-radius: 10px; background: rgba(239, 68, 68, 0.16); border: 1px solid rgba(239, 68, 68, 0.35); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">⚠️</div>
+        <div style="font-size: 15px; font-weight: 700;" class="mac-setting-title" id="webResetConfirmTitle">恢复软件出厂默认设置？</div>
+      </div>
+      <!-- Description -->
+      <div style="font-size: 12px; font-weight: 500; color: #94A3B8; line-height: 1.6; margin-bottom: 12px;" id="webResetConfirmDesc">
+        此操作属于危险操作，执行后将清除所有个性化偏好且无法撤销：
+      </div>
+      <!-- Details Inset Card -->
+      <div class="mac-inset-card" style="margin-bottom: 18px; padding: 12px 14px; background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; font-size: 11.5px; line-height: 1.7; display: flex; flex-direction: column; gap: 4px;">
+        <div id="webResetBulletHk">• 全部全局快捷键恢复为默认初始键位</div>
+        <div id="webResetBulletPresets">• 6 项常用场景预设（含自定义预设）恢复出厂数值</div>
+        <div id="webResetBulletPrefs">• 开机自启、窗口记忆与平滑过渡偏好恢复初始状态</div>
+        <div id="webResetBulletTheme">• 外观主题恢复为深色，界面语言恢复为简体中文</div>
+      </div>
+      <!-- Actions: Cancel & Red Destructive Confirm -->
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button onclick="closeWebResetConfirmModal()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; color: #CBD5E1; font-size: 12px; font-weight: 600; padding: 6px 16px; cursor: pointer;" id="webResetBtnCancel">取消</button>
+        <button onclick="confirmResetMacPreferencesAll()" style="background: linear-gradient(180deg, #EF4444 0%, #DC2626 100%); border: 1px solid #B91C1C; border-radius: 8px; color: #FFFFFF; font-size: 12px; font-weight: 700; padding: 6px 18px; cursor: pointer;" id="webResetBtnOk">确定恢复出厂设置</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modular Web Scripts -->
+  <script src="web/js/i18n.js"></script>
+  <script src="web/js/simulator.js"></script>
+  <script src="web/js/presets.js"></script>
+  <script src="web/js/modals.js"></script>
+  <script src="web/js/interactions.js"></script>
+</body>
+</html>
