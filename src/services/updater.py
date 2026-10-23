@@ -17,7 +17,7 @@ import urllib.request
 import urllib.error
 from typing import Dict, Any, Optional, Tuple
 
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QPoint, QRectF, QUrl
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QPoint, QRectF, QUrl, QTimer
 from PyQt5.QtGui import (
     QColor,
     QPainter,
@@ -61,17 +61,12 @@ def is_safe_download_url(url: str) -> bool:
     except Exception:
         return False
 
-# 默认官方云端元数据发布检测源列表 (支持 Cloudflare Pages CDN、GitHub Releases API 与多源 Raw 容灾)
+# 默认官方云端元数据发布检测源列表 (直连 GitHub Releases 官方发布体系与 CDN 容灾镜像)
 DEFAULT_UPDATE_URLS = [
     # 1. GitHub 官方 Releases 公共 API (直连 Releases 发布体系，第一时间感知发布)
     "https://api.github.com/repos/Fugui-Dai/LunaDimmer/releases/latest",
     # 2. GitHub 官方 Releases 加速镜像 (国内免代理直连)
     "https://ghfast.top/https://api.github.com/repos/Fugui-Dai/LunaDimmer/releases/latest",
-    # 3. Cloudflare Pages 静态源与仓库 Raw 备用通道
-    "https://lunadimmer.pages.dev/version.json",
-    "https://raw.githubusercontent.com/Fugui-Dai/LunaDimmer/main/version.json",
-    "https://raw.githubusercontent.com/Fugui-Dai/LunaDimmer/master/version.json",
-    "https://cdn.jsdelivr.net/gh/Fugui-Dai/LunaDimmer@main/version.json",
 ]
 DEFAULT_UPDATE_METADATA_URL = DEFAULT_UPDATE_URLS[0]
 
@@ -352,8 +347,9 @@ def apply_update_and_restart(new_exe_path: str) -> None:
 chcp 65001 >nul 2>&1
 cd /d "{exe_dir}"
 
-:: 等待当前主进程完全退出，若有延迟直接强制清理
-taskkill /F /PID {current_pid} >nul 2>&1
+:: 终止当前程序树及所有关联同名实例（彻底释放 PyInstaller 引导进程与 Crash Guardian 句柄）
+taskkill /F /T /PID {current_pid} >nul 2>&1
+taskkill /F /IM "{exe_name}" >nul 2>&1
 ping 127.0.0.1 -n 2 >nul
 
 set RETRY=0
@@ -382,10 +378,19 @@ del "%~f0" >nul 2>&1
     with open(bat_path, "w", encoding="utf-8", newline="\r\n") as f:
         f.write(bat_content)
 
+    # 尝试主动关闭单实例互斥锁句柄，确保重启进程不会被误判拦截
+    try:
+        import ctypes
+        from src.main import _single_instance_mutex
+        if _single_instance_mutex:
+            ctypes.windll.kernel32.CloseHandle(_single_instance_mutex)
+    except Exception:
+        pass
+
     CREATE_NO_WINDOW = 0x08000000
     DETACHED_PROCESS = 0x00000008
     subprocess.Popen(
-        f'cmd.exe /c "{bat_path}"',
+        f'cmd.exe /c ""{bat_path}""',
         creationflags=CREATE_NO_WINDOW | DETACHED_PROCESS,
         close_fds=True,
         shell=False,

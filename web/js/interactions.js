@@ -402,17 +402,18 @@
         }
       }
     } catch (e) {
-      // GitHub API 超时或频控限制，平滑降级到本地配置
+      // 官方接口超时，降级到 CDN 镜像探测
     }
 
-    // 优先级 2：读取同源部署的 version.json
+    // 优先级 2：国内加速镜像 API 容灾探测
     try {
-      const res = await fetch('./version.json?t=' + Date.now(), { cache: 'no-cache' });
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.version) {
-          const rawUrl = data.download_url || `https://github.com/Fugui-Dai/LunaDimmer/releases/download/v${data.version}/LunaDimmer_v${data.version}.exe`;
-          applyDownloadLink(data.version, rawUrl, `LunaDimmer_v${data.version}.exe`);
+      const mirrorRes = await fetch('https://ghfast.top/https://api.github.com/repos/Fugui-Dai/LunaDimmer/releases/latest');
+      if (mirrorRes.ok) {
+        const ghData = await mirrorRes.json();
+        const assets = ghData.assets || [];
+        const exeAsset = assets.find(a => a.name && a.name.endsWith('.exe')) || assets[0];
+        if (exeAsset && exeAsset.browser_download_url) {
+          applyDownloadLink(ghData.tag_name || 'v1.0.1', exeAsset.browser_download_url, exeAsset.name);
           return;
         }
       }
