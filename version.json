@@ -1,11 +1,11 @@
 {
-  "version": "1.0.1",
-  "release_date": "2026-10-23",
-  "download_url": "https://github.com/Fugui-Dai/LunaDimmer/releases/download/v1.0.1/LunaDimmer_v1.0.1.exe",
+  "version": "1.0.2",
+  "release_date": "2026-10-24",
+  "download_url": "https://github.com/Fugui-Dai/LunaDimmer/releases/download/v1.0.2/LunaDimmer_v1.0.2.exe",
   "file_size": "25 MB",
   "is_critical": false,
   "changelog": {
-    "zh-CN": "1. 修复偏好设置外链跳转后导致页面交互卡死的问题\n2. 修复浅色主题下弹窗文字对比度发白问题\n3. 优化打赏支持页面排版并引入昼夜分时心意关怀\n4. 应用内多线程自动更新与平滑重启引擎",
-    "en-US": "1. Fixed settings interaction deadlock after external URL click\n2. Fixed white-on-white text contrast in light theme\n3. Redesigned sponsor dialog with compact circadian empathy note\n4. In-app multi-threaded auto-update and smooth restart engine"
+    "zh-CN": "测试内容",
+    "en-US": "Test content"
   }
 }
