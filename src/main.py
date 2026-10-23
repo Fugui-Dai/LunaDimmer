@@ -505,10 +505,8 @@ def main():
         main_win.toggle_panel(force_show=True, from_tray=True)
     else:
         logger.info("LunaDimmer 随系统开机静默启动，常驻系统托盘就绪。")
-
-    # 启动 3 秒后执行后台静默检查更新（若开启）
-    if main_win.config.get("auto_update", True):
-        QTimer.singleShot(3000, lambda: main_win.check_for_updates(silent=True))
+    # 每次进入程序均在后台静默检查更新（结果仅在偏好设置页面呈现，不打扰首页）
+    QTimer.singleShot(1000, lambda: main_win.check_for_updates(silent=True))
 
     sys.exit(app.exec_())
 

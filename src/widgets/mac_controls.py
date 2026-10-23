@@ -376,9 +376,7 @@ class MacNavButton(QPushButton):
         return QSize(163, 38)
 
     def set_badge(self, show: bool):
-        if getattr(self, "_show_badge", False) != bool(show):
-            self._show_badge = bool(show)
-            self.update()
+        pass
 
     def set_active(self, active: bool):
         if self._is_active != active:
@@ -514,15 +512,6 @@ class MacNavButton(QPushButton):
                 p.setPen(QColor(235, 235, 245, 165))
 
         p.drawText(text_rect, Qt.AlignVCenter | Qt.AlignLeft, self._title)
-
-        # 4. 绘制未读红点 (Notification Badge Dot: 7px Apple Vibrant Red)
-        if getattr(self, "_show_badge", False):
-            dot_r = 3.5
-            dot_cx = rect.width() - 14.0
-            dot_cy = rect.height() / 2.0
-            p.setPen(Qt.NoPen)
-            p.setBrush(QBrush(QColor("#FF3B30")))
-            p.drawEllipse(QPointF(dot_cx, dot_cy), dot_r, dot_r)
 
 
 class MacTrafficLights(QWidget):

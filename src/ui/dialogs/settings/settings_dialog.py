@@ -359,6 +359,15 @@ class SettingsDialog(QDialog):
 
     def _check_updates_online(self):
         """检查版本更新流程（单个在飞 worker，杜绝重复点击产生野线程）"""
+        # 若此前已检测到新版本就绪，直接唤起升级详情弹窗
+        parent_cached = getattr(self.parent(), "_cached_update_data", None)
+        if parent_cached and isinstance(parent_cached, dict):
+            cached_ver = parent_cached.get("version", "")
+            if is_newer_version(cached_ver, CURRENT_VERSION):
+                dlg = UpgradeDialog(update_info=parent_cached, parent=self)
+                dlg.exec_()
+                return
+
         if self.worker is not None and self.worker.isRunning():
             return
 
@@ -389,14 +398,8 @@ class SettingsDialog(QDialog):
                     if hasattr(self.parent(), "_cached_update_data"):
                         self.parent()._cached_update_data = data
 
-                    # 首页面不提示不显示，仅在偏好设置侧边栏「常规与启动」及更新条目展示精致红点
-                    if hasattr(self, "nav_buttons") and len(self.nav_buttons) > 0:
-                        self.nav_buttons[0].set_badge(True)
-
-                    if lbl_target:
-                        lbl_target.setText(f"🔴 {t('current_version', '当前版本')}: V{CURRENT_VERSION} ➔ V{remote_ver}")
-                    if btn_check:
-                        btn_check.setText(f"🔴 {t('btn_view_update', '查看更新')}")
+                    # 方案二：左侧纯净保持当前版本，右侧按钮高亮跃升为行动蓝【立即更新】
+                    self.general_page.set_update_available(True, remote_ver)
                     dlg = UpgradeDialog(update_info=data, parent=self)
                     result = dlg.exec_()
                     if result == QDialog.Accepted:
@@ -656,21 +659,16 @@ class SettingsDialog(QDialog):
         # 恢复上次停留的分组（打开设置不应每次都把用户甩回第一页）
         self._on_nav_clicked(self._current_nav_index)
 
-        # 静默感知：若已探测到新版本，首页面不提示，仅在偏好设置侧边栏及条目呈现红点就绪态
+        # 静默感知：若已探测到新版本，首页面不提示，仅在偏好设置页面将按钮高亮点亮为【立即更新】
         parent_cached = getattr(self.parent(), "_cached_update_data", None)
         if parent_cached and isinstance(parent_cached, dict):
             cached_ver = parent_cached.get("version", "")
             if is_newer_version(cached_ver, CURRENT_VERSION):
-                if hasattr(self, "nav_buttons") and len(self.nav_buttons) > 0:
-                    self.nav_buttons[0].set_badge(True)
-
-                row_update = getattr(self.general_page, "row_update", None)
-                lbl_target = getattr(row_update, "lbl_title", None)
-                btn_check = getattr(self.general_page, "btn_check_update", None)
-                if lbl_target:
-                    lbl_target.setText(f"🔴 {t('current_version', '当前版本')}: V{CURRENT_VERSION} ➔ V{cached_ver}")
-                if btn_check:
-                    btn_check.setText(f"🔴 {t('btn_view_update', '查看更新')}")
+                self.general_page.set_update_available(True, cached_ver)
+            else:
+                self.general_page.set_update_available(False)
+        else:
+            self.general_page.set_update_available(False)
 
         self.raise_()
         self.activateWindow()

@@ -42,7 +42,7 @@ from PyQt5.QtWidgets import (
 
 from src.services.i18n import t, get_language
 
-CURRENT_VERSION = "1.0.0"
+CURRENT_VERSION = "1.0.1"
 
 # 允许交给浏览器打开的下载链接协议白名单（防止远端元数据投毒成 file:// 或自定义协议）
 SAFE_DOWNLOAD_SCHEMES = ("https", "http")

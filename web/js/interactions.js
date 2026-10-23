@@ -397,7 +397,7 @@
         const assets = ghData.assets || [];
         const exeAsset = assets.find(a => a.name && a.name.endsWith('.exe')) || assets[0];
         if (exeAsset && exeAsset.browser_download_url) {
-          applyDownloadLink(ghData.tag_name || 'v1.0.0', exeAsset.browser_download_url, exeAsset.name);
+          applyDownloadLink(ghData.tag_name || 'v1.0.1', exeAsset.browser_download_url, exeAsset.name);
           return;
         }
       }
@@ -422,10 +422,10 @@
 
     // 优先级 3：终极保底（直接提供稳定直链，绝不跳网页）
     const fallbackUrl = isZh
-      ? 'https://ghfast.top/https://github.com/Fugui-Dai/LunaDimmer/releases/download/v1.0.0/LunaDimmer_v1.0.0.exe'
-      : 'https://github.com/Fugui-Dai/LunaDimmer/releases/download/v1.0.0/LunaDimmer_v1.0.0.exe';
+      ? 'https://ghfast.top/https://github.com/Fugui-Dai/LunaDimmer/releases/download/v1.0.1/LunaDimmer_v1.0.1.exe'
+      : 'https://github.com/Fugui-Dai/LunaDimmer/releases/download/v1.0.1/LunaDimmer_v1.0.1.exe';
     btn.href = fallbackUrl;
-    btn.setAttribute('download', 'LunaDimmer_v1.0.0.exe');
+    btn.setAttribute('download', 'LunaDimmer_v1.0.1.exe');
   }
 
   // =========================================================================

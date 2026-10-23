@@ -134,7 +134,7 @@ class GeneralPage(QWidget):
         self.btn_check_update.clicked.connect(self._on_check_update_clicked)
 
         self.row_update = MacSettingRow(
-            f"{t('current_version', '当前版本')}: V{CURRENT_VERSION}",
+            f"{t('current_version', '当前版本')}: v{CURRENT_VERSION}",
             "",
             self.btn_check_update,
             is_last=False,
@@ -239,6 +239,44 @@ class GeneralPage(QWidget):
         self.btn_copy_qq.setText(t("copied", "✓ 已复制"))
         QTimer.singleShot(2000, lambda: self.btn_copy_qq.setText(t("btn_copy_qq", "📋 复制")) if hasattr(self, "btn_copy_qq") and self.btn_copy_qq else None)
 
+    def set_update_available(self, available: bool, remote_ver: str = ""):
+        """方案二：左侧纯净保持当前版本，右侧按钮视觉跃升为高对比度品牌蓝行动按钮【立即更新】"""
+        self._update_available = bool(available)
+        self._remote_ver = remote_ver
+        if hasattr(self, "row_update") and hasattr(self.row_update, "lbl_title"):
+            # 严格遵循用户指令：不显示 v1.0.0 → v1.0.1，始终纯净展示当前版本
+            self.row_update.lbl_title.setText(f"{t('current_version', '当前版本')}: v{CURRENT_VERSION}")
+
+        if hasattr(self, "btn_check_update"):
+            if self._update_available:
+                self.btn_check_update.setText(t("btn_update_now", "立即更新"))
+                self.btn_check_update.setToolTip(f"新版本 v{remote_ver} 已就绪，点击升级" if remote_ver else "")
+                self.btn_check_update.setStyleSheet("""
+                    QPushButton {
+                        background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #0A84FF, stop:1 #0071E3);
+                        border: 1px solid rgba(255, 255, 255, 0.30);
+                        border-radius: 6px;
+                        color: #FFFFFF;
+                        font-size: 12.5px;
+                        font-weight: 700;
+                        padding: 2px 14px;
+                    }
+                    QPushButton:hover {
+                        background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 #2997FF, stop:1 #0A84FF);
+                        border-color: rgba(255, 255, 255, 0.50);
+                        color: #FFFFFF;
+                    }
+                    QPushButton:pressed {
+                        background: #005BB5;
+                    }
+                """)
+            else:
+                self.btn_check_update.setText(t("btn_check_update", "检查更新"))
+                self.btn_check_update.setToolTip("")
+                btn_style = getattr(self, "_cached_btn_style", "")
+                if btn_style:
+                    self.btn_check_update.setStyleSheet(btn_style)
+
     def apply_theme(self, theme: str):
         for card in [self.card_theme, self.card_gen, self.card_update]:
             card.apply_theme(theme)
@@ -307,7 +345,11 @@ class GeneralPage(QWidget):
                     background: rgba(255, 255, 255, 0.22);
                 }
             """
-        self.btn_check_update.setStyleSheet(btn_style)
+        self._cached_btn_style = btn_style
+        if getattr(self, "_update_available", False):
+            self.set_update_available(True, getattr(self, "_remote_ver", ""))
+        else:
+            self.btn_check_update.setStyleSheet(btn_style)
         if hasattr(self, "btn_visit_site"):
             self.btn_visit_site.setStyleSheet(btn_style)
         if hasattr(self, "btn_copy_qq"):
@@ -330,7 +372,7 @@ class GeneralPage(QWidget):
         self.row_lang.lbl_title.setText(t("pref_lang"))
         self.row_autoupdate.lbl_title.setText(t("auto_update"))
         self.row_autoupdate.lbl_sub.setText(t("auto_update_sub"))
-        self.row_update.lbl_title.setText(f"{t('current_version', '当前版本')}: V{CURRENT_VERSION}")
+        self.row_update.lbl_title.setText(f"{t('current_version', '当前版本')}: v{CURRENT_VERSION}")
         if getattr(self.row_update, "lbl_sub", None):
             self.row_update.lbl_sub.setText("")
         self.btn_check_update.setText(t("btn_check_update"))
